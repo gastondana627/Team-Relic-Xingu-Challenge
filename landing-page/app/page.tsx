@@ -3,28 +3,31 @@ import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
 
-// This teamMembers array is now updated with the new detailed fields.
+// This teamMembers array is now updated with the fix and new links.
 const teamMembers = [
     {
         name: "GasMan",
         role: "Video, Documentation & Landing Page",
-        imageUrl: "/assets/team-member-1.jpg", // Make sure you have this image
+        imageUrl: "/assets/team-member-1.jpg",
         headline: "Digital Storyteller & Frontend Developer",
-        bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic's discoveries to life through visual media and an interactive web experience.",
+        // The apostrophe in "Relic's" is fixed here
+        bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
             github: "https://github.com/gastondana627",
-            linkedin: "https://linkedin.com/in/your-profile", // Edit this link
+            // This link is now updated
+            linkedin: "https://www.linkedin.com/in/gaston-d-859653184/",
         }
     },
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        imageUrl: "/assets/team-member-2.jpg", // Make sure you have this image
+        imageUrl: "/assets/team-member-2.jpg",
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
-            linkedin: "https://linkedin.com/in/their-profile", // Edit this link
-            twitter: "https://twitter.com/their-handle", // Edit this link
+            // This link is now updated
+            linkedin: "https://www.linkedin.com/in/chisom-aniekwensi/",
+            twitter: "https://twitter.com/their-handle",
         }
     },
 ];
