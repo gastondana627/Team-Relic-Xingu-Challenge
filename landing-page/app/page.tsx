@@ -7,7 +7,8 @@ const teamMembers = [
     {
         name: "GasMan",
         role: "Video, Documentation & Landing Page",
-        imageUrl: "/assets/team-member-1.jpg",
+        // This is now updated to use the correct filename
+        imageUrl: "/assets/Gasman.jpg", 
         headline: "Digital Storyteller & Frontend Developer",
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
@@ -18,7 +19,8 @@ const teamMembers = [
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        imageUrl: "/assets/team-member-2.jpg",
+        // This is now updated to use the correct filename
+        imageUrl: "/assets/Chisom.jpg", 
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
@@ -96,9 +98,8 @@ export default function HomePage() {
           <h2>The Evidence Locker</h2>
           <p className="section-intro">Reproducibility and transparency are core to our findings. Here, we present the methodology, code, and AI-driven analysis that form the foundation of our discoveries.</p>
           <div className="evidence-grid">
-            <EvidenceCard title="Notebook 1: Broad Discovery Log" description="This notebook details our initial exploration, custom analysis toolkit, and the process of identifying all five anomalies. It's the story of our search." link="https://colab.research.google.com/drive/1jbDHWSLOBPMTQ9Rhr5pqWmUacelB3dsg?usp=sharing" buttonText="View C1 Discovery Log" />
+            <EvidenceCard title="Notebook 1: Broad Discovery Log" description="This notebook details our initial exploration, custom analysis toolkit, and the process of identifying all five anomalies. It&apos;s the story of our search." link="https://colab.research.google.com/drive/1jbDHWSLOBPMTQ9Rhr5pqWmUacelB3dsg?usp=sharing" buttonText="View C1 Discovery Log" />
             <EvidenceCard title="Notebook 2: Deep Dive Analysis" description="Our deep dive into Anomaly #4, detailing algorithmic detection, AI-powered historical synthesis, and comparative analysis against Kuhikugu." link="https://colab.research.google.com/drive/1B6gPASgZ9gpkcJQrnvRm3xL2XrIczszl?usp=sharing" buttonText="Explore C2 Deep Dive" />
-            {/* The single quotes are now replaced with HTML entities to fix the build error */}
             <EvidenceCard title="AI-Powered Historical Synthesis" description="We leveraged OpenAI's models to analyze academic texts, colonial diaries, and oral histories, creating a &quot;Research Dossier&quot; for our findings." link="https://www.kaggle.com/code/gastondana/c2-discovery-notebook-ipynb" buttonText="See AI in Action" />
           </div>
         </section>
@@ -155,7 +156,7 @@ export default function HomePage() {
             </RulesAccordion>
         </section>
 
-        {/* This is the new Project Links section you requested */}
+        {/* Project Links Section */}
         <section id="links" className="project-links-section">
           <h2>Project Links & Repository</h2>
           <div className="links-grid">
