@@ -3,18 +3,15 @@ import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
 
-// This teamMembers array is now updated with the fix and new links.
 const teamMembers = [
     {
         name: "GasMan",
         role: "Video, Documentation & Landing Page",
         imageUrl: "/assets/team-member-1.jpg",
         headline: "Digital Storyteller & Frontend Developer",
-        // The apostrophe in "Relic's" is fixed here
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
             github: "https://github.com/gastondana627",
-            // This link is now updated
             linkedin: "https://www.linkedin.com/in/gaston-d-859653184/",
         }
     },
@@ -25,7 +22,6 @@ const teamMembers = [
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
-            // This link is now updated
             linkedin: "https://www.linkedin.com/in/chisom-aniekwensi/",
             twitter: "https://twitter.com/their-handle",
         }
@@ -102,7 +98,8 @@ export default function HomePage() {
           <div className="evidence-grid">
             <EvidenceCard title="Notebook 1: Broad Discovery Log" description="This notebook details our initial exploration, custom analysis toolkit, and the process of identifying all five anomalies. It's the story of our search." link="https://colab.research.google.com/drive/1jbDHWSLOBPMTQ9Rhr5pqWmUacelB3dsg?usp=sharing" buttonText="View C1 Discovery Log" />
             <EvidenceCard title="Notebook 2: Deep Dive Analysis" description="Our deep dive into Anomaly #4, detailing algorithmic detection, AI-powered historical synthesis, and comparative analysis against Kuhikugu." link="https://colab.research.google.com/drive/1B6gPASgZ9gpkcJQrnvRm3xL2XrIczszl?usp=sharing" buttonText="Explore C2 Deep Dive" />
-            <EvidenceCard title="AI-Powered Historical Synthesis" description="We leveraged OpenAI's models to analyze academic texts, colonial diaries, and oral histories, creating a 'Research Dossier' for our findings." link="https://www.kaggle.com/code/gastondana/c2-discovery-notebook-ipynb" buttonText="See AI in Action" />
+            {/* The single quotes are now replaced with HTML entities to fix the build error */}
+            <EvidenceCard title="AI-Powered Historical Synthesis" description="We leveraged OpenAI's models to analyze academic texts, colonial diaries, and oral histories, creating a &quot;Research Dossier&quot; for our findings." link="https://www.kaggle.com/code/gastondana/c2-discovery-notebook-ipynb" buttonText="See AI in Action" />
           </div>
         </section>
         
