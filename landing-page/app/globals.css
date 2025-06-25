@@ -70,23 +70,6 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
 .timeline-item h3 { margin-bottom: 0.5rem; }
 .timeline-item p { margin-bottom: 0.5rem; color: var(--text-secondary); }
 
-/* Team Section */
-.team-section { background-color: transparent; }
-.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; width: 100%; max-width: 800px; }
-.team-card { text-align: center; }
-.team-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); margin-bottom: 1rem; filter: sepia(0.3); }
-.team-card h4 { font-size: 1.2rem; }
-.team-card p { color: var(--text-secondary); margin-bottom: 0; }
-
-/* Accordion & Footer */
-.rules-section { width: 100%; max-width: 900px; }
-.accordion { background-color: var(--panel-dark); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem; width: 100%; }
-.accordion summary { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 1.5rem; cursor: pointer; outline: none; position: relative; }
-.accordion summary::after { content: '+'; position: absolute; right: 1.5rem; font-size: 1.8rem; transition: transform 0.2s ease; }
-.accordion[open] summary::after { transform: rotate(45deg); }
-.accordion-content { padding: 0 1.5rem 1.5rem 1.5rem; }
-.footer { text-align: center; padding: 3rem; background-color: #1f1d1a; border-top: 1px solid var(--border-color); }
-
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
   h2 { font-size: 2rem; }
@@ -99,10 +82,8 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   .team-avatar { width: 100px; height: 100px; }
 }
 
-
-/* ADD THIS TO THE BOTTOM OF globals.css */
-
 /* Enhanced Team Card Styles */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; width: 100%; max-width: 900px; }
 .team-card {
   background-color: var(--panel-dark);
   padding: 2rem;
@@ -111,39 +92,31 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
-
+.team-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); margin-bottom: 1rem; filter: sepia(0.3); }
 .team-name { font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--accent-gold); }
 .team-role { color: var(--text-primary); font-family: 'Manrope', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
 .team-headline { font-style: italic; color: var(--text-secondary); margin-bottom: 1rem; }
 .team-bio { font-size: 1rem; color: var(--text-primary); text-align: center; }
+.team-socials { margin-top: 1.5rem; display: flex; gap: 1.5rem; }
+.team-socials a { color: var(--text-secondary); font-family: 'Manrope', sans-serif; font-weight: 600; border-bottom: 1px solid transparent; transition: all 0.3s ease; }
+.team-socials a:hover { color: var(--accent-gold); border-bottom-color: var(--accent-gold); }
 
-.team-socials {
-  margin-top: 1.5rem;
-  display: flex;
-  gap: 1.5rem;
-}
-
-.team-socials a {
-  color: var(--text-secondary);
-  font-family: 'Manrope', sans-serif;
-  font-weight: 600;
-  border-bottom: 1px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.team-socials a:hover {
-  color: var(--accent-gold);
-  border-bottom-color: var(--accent-gold);
-}
-
+/* Accordion & Footer */
+.rules-section { width: 100%; max-width: 900px; }
+.accordion { background-color: var(--panel-dark); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem; width: 100%; }
+.accordion summary { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 1.5rem; cursor: pointer; outline: none; position: relative; }
+.accordion summary::after { content: '+'; position: absolute; right: 1.5rem; font-size: 1.8rem; transition: transform 0.2s ease; }
+.accordion[open] summary::after { transform: rotate(45deg); }
+.accordion-content { padding: 0 1.5rem 1.5rem 1.5rem; }
+.footer { text-align: center; padding: 3rem; background-color: #1f1d1a; border-top: 1px solid var(--border-color); }
 
 /* Project Links Section Styles */
 .project-links-section {
   background-color: var(--panel-dark);
   width: 100%;
 }
-
 .links-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -152,13 +125,11 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   max-width: 1000px;
   text-align: center;
 }
-
 .link-category h3 {
   font-size: 1.8rem;
   color: var(--accent-gold);
   margin-bottom: 1.5rem;
 }
-
 .link-category a {
   display: block;
   margin-bottom: 1rem;
@@ -170,12 +141,77 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   background-color: var(--background-dark);
   transition: all 0.3s ease;
 }
-
 .link-category a:hover {
   transform: translateY(-5px);
   border-color: var(--accent-gold);
   color: white;
 }
 
+/* Smart FAQ / AI Insights Section Styles */
+.ai-insights-section {
+  background-color: var(--background-dark); /* Match the main background */
+  width: 100%;
+}
+.smart-faq-container {
+  width: 100%;
+  max-width: 900px;
+  background-color: var(--panel-dark);
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  border-radius: 4px;
+}
+.prompt-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center; /* Center the buttons */
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.prompt-button {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+.prompt-button:hover {
+  background-color: var(--accent-gold);
+  color: var(--background-dark);
+  transform: translateY(-3px);
+  border-color: var(--accent-gold);
+}
+.prompt-button.active {
+  background-color: var(--accent-gold);
+  color: var(--background-dark);
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(199, 164, 74, 0.4);
+}
+.answer-panel {
+  padding: 1rem;
+  min-height: 150px; /* Give it some space */
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  line-height: 1.7;
+  font-style: italic;
+  text-align: center; /* Center the answer text */
+}
+.answer-panel p {
+  animation: fadeIn 0.5s ease-in-out;
+  max-width: 100%; /* Override the default p max-width */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 

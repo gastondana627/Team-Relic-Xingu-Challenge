@@ -2,13 +2,13 @@ import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
+import SmartFAQ from './components/SmartFAQ'; // Import the new component
 
 const teamMembers = [
     {
         name: "GasMan",
         role: "Video, Documentation & Landing Page",
-        // This is now updated to use the correct filename
-        imageUrl: "/assets/Gasman.jpg", 
+        imageUrl: "/assets/Gasman.jpg",
         headline: "Digital Storyteller & Frontend Developer",
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
@@ -19,8 +19,7 @@ const teamMembers = [
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        // This is now updated to use the correct filename
-        imageUrl: "/assets/Chisom.jpg", 
+        imageUrl: "/assets/Chisom.jpg",
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
@@ -102,6 +101,15 @@ export default function HomePage() {
             <EvidenceCard title="Notebook 2: Deep Dive Analysis" description="Our deep dive into Anomaly #4, detailing algorithmic detection, AI-powered historical synthesis, and comparative analysis against Kuhikugu." link="https://colab.research.google.com/drive/1B6gPASgZ9gpkcJQrnvRm3xL2XrIczszl?usp=sharing" buttonText="Explore C2 Deep Dive" />
             <EvidenceCard title="AI-Powered Historical Synthesis" description="We leveraged OpenAI's models to analyze academic texts, colonial diaries, and oral histories, creating a &quot;Research Dossier&quot; for our findings." link="https://www.kaggle.com/code/gastondana/c2-discovery-notebook-ipynb" buttonText="See AI in Action" />
           </div>
+        </section>
+
+        {/* This is the new AI Insights section */}
+        <section id="ai-insights" className="ai-insights-section">
+          <h2>AI-Powered Insights (Checkpoint 3)</h2>
+          <p className="section-intro">
+            This interactive tool demonstrates our project&apos;s ability to generate deep insights. Select a prompt below to reveal AI-generated answers based on our curated research data.
+          </p>
+          <SmartFAQ />
         </section>
         
         {/* Section 4: Project Timeline */}
