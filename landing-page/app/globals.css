@@ -1,42 +1,100 @@
+/* Import a more thematic font */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Manrope:wght@700;800&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* A dusty, dark background */
+  --background-dark: #2a2825; 
+  /* A warmer, parchment-like panel color */
+  --panel-dark: #3d3a36; 
+  --text-primary: #e0dccc; /* Off-white, like aged paper */
+  --text-secondary: #a8a192; /* Faded text color */
+  /* A more antique, less vibrant gold */
+  --accent-gold: #c7a44a; 
+  --border-color: #5c554a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
+/* --- BASIC RESET & TEXTURE --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  /* A subtle texture like old paper or stone */
+  background-color: var(--background-dark);
+  background-image: url('https://www.transparenttextures.com/patterns/old-wall.png');
+  color: var(--text-primary);
+  /* Using our new thematic font for body text */
+  font-family: 'Cormorant Garamond', serif; 
+  line-height: 1.8;
+  font-size: 1.1rem;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; font-weight: 800; color: white; margin-bottom: 1rem; letter-spacing: 0.5px; }
+h2 { font-size: 2.5rem; text-align: center; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--accent-gold); display: inline-block; }
+p { margin-bottom: 1rem; max-width: 65ch; }
+a { color: var(--accent-gold); text-decoration: none; transition: color 0.3s ease; }
+a:hover { color: white; }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
+section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items: center; }
+.section-intro { text-align: center; color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 4rem; }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+/* --- THEME-ENHANCED SECTIONS --- */
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* Hero Section */
+.hero { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
+.hero-video { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; object-fit: cover; transform: translate(-50%, -50%); z-index: -1; filter: brightness(0.4) saturate(0.8); }
+.hero-content { background: rgba(0, 0, 0, 0.5); padding: 2rem 4rem; border: 1px solid var(--border-color); backdrop-filter: blur(5px); }
+.hero h1 { font-size: 5rem; font-weight: 800; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+.hero .subtitle { font-size: 1.5rem; color: var(--text-primary); margin-top: 0.5rem; font-family: 'Manrope', sans-serif; text-shadow: 1px 1px 5px rgba(0,0,0,0.5); }
+.cta-button { display: inline-block; margin-top: 2rem; padding: 1rem 2.5rem; background-color: var(--accent-gold); color: var(--background-dark); font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 1.1rem; border: 2px solid #a68a3e; border-radius: 50px; text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s ease; box-shadow: 0px 4px 15px rgba(0,0,0,0.3); }
+.cta-button:hover { transform: translateY(-5px); background-color: white; box-shadow: 0px 8px 25px rgba(0,0,0,0.4); }
+
+/* Anomaly Card - now with a more artifact-like feel */
+.anomaly-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem; width: 100%; max-width: 1300px; }
+.anomaly-card { background-color: var(--panel-dark); border-radius: 4px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid var(--border-color); border-bottom: 3px solid var(--accent-gold); }
+.anomaly-card:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); }
+.anomaly-image { width: 100%; height: 250px; object-fit: cover; filter: sepia(0.2) contrast(0.9); }
+.anomaly-card-content { padding: 1.5rem; }
+.anomaly-card h3 { font-size: 1.6rem; color: var(--accent-gold); }
+
+/* Evidence Section */
+.evidence-section { background-color: rgba(0,0,0,0.2); }
+.evidence-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; width: 100%; max-width: 1200px; }
+.evidence-card { background: var(--panel-dark); padding: 2.5rem; border-radius: 4px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+.evidence-card h3 { color: var(--accent-gold); }
+.cta-button-secondary { display: inline-block; margin-top: 1.5rem; padding: 0.8rem 1.8rem; border: 1px solid var(--accent-gold); color: var(--accent-gold); font-family: 'Manrope', sans-serif; font-weight: 700; border-radius: 50px; transition: all 0.3s ease; }
+.cta-button-secondary:hover { background-color: var(--accent-gold); color: var(--background-dark); transform: translateY(-3px); }
+
+/* Timeline Section - now like field notes */
+.timeline { width: 100%; max-width: 800px; border-left: 2px solid var(--accent-gold); padding-left: 2rem; }
+.timeline-item { padding: 1rem 0 2rem 1rem; position: relative; }
+.timeline-item::before { content: '⬩'; /* A diamond shape for a marker */ position: absolute; left: -2.7rem; top: 0.8rem; width: 20px; height: 20px; color: var(--accent-gold); font-size: 2.5rem; }
+.timeline-item h3 { margin-bottom: 0.5rem; }
+.timeline-item p { margin-bottom: 0.5rem; color: var(--text-secondary); }
+
+/* Team Section */
+.team-section { background-color: transparent; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; width: 100%; max-width: 800px; }
+.team-card { text-align: center; }
+.team-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent-gold); margin-bottom: 1rem; filter: sepia(0.3); }
+.team-card h4 { font-size: 1.2rem; }
+.team-card p { color: var(--text-secondary); margin-bottom: 0; }
+
+/* Accordion & Footer */
+.rules-section { width: 100%; max-width: 900px; }
+.accordion { background-color: var(--panel-dark); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem; width: 100%; }
+.accordion summary { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 1.5rem; cursor: pointer; outline: none; position: relative; }
+.accordion summary::after { content: '+'; position: absolute; right: 1.5rem; font-size: 1.8rem; transition: transform 0.2s ease; }
+.accordion[open] summary::after { transform: rotate(45deg); }
+.accordion-content { padding: 0 1.5rem 1.5rem 1.5rem; }
+.footer { text-align: center; padding: 3rem; background-color: #1f1d1a; border-top: 1px solid var(--border-color); }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  h2 { font-size: 2rem; }
+  .hero h1 { font-size: 3.5rem; }
+  .hero .subtitle { font-size: 1.2rem; }
+  .hero-content { padding: 1.5rem; backdrop-filter: none; }
+  section { padding: 4rem 1rem; }
+  .anomaly-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .team-avatar { width: 100px; height: 100px; }
 }
