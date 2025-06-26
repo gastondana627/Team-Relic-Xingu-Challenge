@@ -7,49 +7,60 @@ const openai = new OpenAI({
 });
 
 export const runtime = 'edge';
+export const maxDuration = 60; // Let's keep the timeout increased
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
-
-  const allMessages = [
-    {
-      role: 'system' as const,
-      content: `You are 'Relic', the AI research assistant for Team Relic... (Your full system prompt here)`, // Your full prompt goes here
-    },
-    ...messages,
-  ];
+  console.log('LOG: API Route started.');
 
   try {
-    // Get a stream from the OpenAI API
+    const { messages } = await req.json();
+    console.log('LOG: Received messages from client.');
+    
+    const allMessages = [
+      {
+        role: 'system' as const,
+        content: `You are 'Relic', the AI research assistant for Team Relic... (full prompt is here)`,
+      },
+      ...messages,
+    ];
+
+    console.log('LOG: Calling OpenAI API with gpt-3.5-turbo...');
+    
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       stream: true,
       messages: allMessages,
     });
 
-    // Manually create a new ReadableStream and pipe the data into it
+    console.log('LOG: Received stream response from OpenAI successfully.');
+
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         for await (const chunk of response) {
           const text = chunk.choices[0]?.delta?.content || '';
           if (text) {
-            // This is the Vercel AI SDK's required data protocol format: '0:"<text>"'
-            const formattedChunk = `0:"${JSON.stringify(text).slice(1, -1)}"\n`;
-            controller.enqueue(encoder.encode(formattedChunk));
+            controller.enqueue(encoder.encode(text));
           }
         }
         controller.close();
       },
     });
 
-    // Return a standard web Response object with the manually-created stream
     return new Response(stream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
 
-  } catch (error) {
-    console.error('CRITICAL ERROR in API route:', error);
+  } catch (error: any) {
+    // --- THIS IS THE NEW, MORE DETAILED LOGGING ---
+    console.error('--- CRITICAL ERROR IN CATCH BLOCK ---');
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Full Error Object:', JSON.stringify(error, null, 2));
+    
     return new Response('An error occurred while processing your request.', { status: 500 });
   }
 }
+
+
+
