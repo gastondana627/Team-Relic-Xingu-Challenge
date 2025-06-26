@@ -2,7 +2,7 @@ import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
-import SmartFAQ from './components/SmartFAQ'; // Import the new component
+import Chat from './components/Chat'; // Import the new Chat component
 
 const teamMembers = [
     {
@@ -102,14 +102,14 @@ export default function HomePage() {
             <EvidenceCard title="AI-Powered Historical Synthesis" description="We leveraged OpenAI's models to analyze academic texts, colonial diaries, and oral histories, creating a &quot;Research Dossier&quot; for our findings." link="https://www.kaggle.com/code/gastondana/c2-discovery-notebook-ipynb" buttonText="See AI in Action" />
           </div>
         </section>
-
-        {/* This is the new AI Insights section */}
+        
+        {/* This is the new Live AI Assistant section */}
         <section id="ai-insights" className="ai-insights-section">
-          <h2>AI-Powered Insights (Checkpoint 3)</h2>
+          <h2>Talk to Our Expedition AI</h2>
           <p className="section-intro">
-            This interactive tool demonstrates our project&apos;s ability to generate deep insights. Select a prompt below to reveal AI-generated answers based on our curated research data.
+            Ask a question about our project, methodology, or findings. Our AI assistant, powered by OpenAI and trained on our research, will answer in real-time.
           </p>
-          <SmartFAQ />
+          <Chat />
         </section>
         
         {/* Section 4: Project Timeline */}
@@ -194,3 +194,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+
