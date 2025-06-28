@@ -4,7 +4,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { knowledgeBase } from '@/app/lib/knowledge_base';
 
-// --- All the setup code for embeddings and search remains the same ---
+// --- Embedding and search functions (no changes here) ---
 let pipelinePromise: Promise<any> | null = null;
 const loadPipeline = async () => {
   if (!pipelinePromise) {
@@ -27,6 +27,7 @@ async function initializeKnowledgeBase() {
   knowledgeBaseEmbeddings = await Promise.all(
     knowledgeBase.map(async (item) => ({ ...item, embedding: Array.from((await extractor(item.content, { pooling: 'mean', normalize: true })).data) }))
   );
+  console.log('Knowledge base embeddings initialized.');
 }
 initializeKnowledgeBase();
 // --- End of setup code ---
@@ -47,17 +48,14 @@ export async function POST(req: Request) {
 
     let topContext = '';
 
-    // --- THIS IS THE NEW HYBRID LOGIC ---
-    // If the query is about the team, force the correct context.
-    if (lowerCaseQuery.includes('who') || lowerCaseQuery.includes('team') || lowerCaseQuery.includes('member')) {
-      console.log('Keyword match found: Forcing team context.');
+    // Hybrid search: Check for keywords first
+    if (lowerCaseQuery.includes('who is on') || lowerCaseQuery.includes('team member') || lowerCaseQuery.includes('the team')) {
       topContext = knowledgeBase
         .filter(item => item.source.startsWith('Team Roster'))
         .map(item => `Source: ${item.source}\nContent: ${item.content}`)
         .join('\n\n');
     } else {
-      // Otherwise, use the smart semantic search for all other questions.
-      console.log('No keyword match: Using semantic search.');
+      // Otherwise, perform semantic search for all other queries
       if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
       const extractor = await loadPipeline();
       const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
@@ -66,16 +64,53 @@ export async function POST(req: Request) {
       topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
     }
 
-    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant... (Your full system prompt from the previous step goes here)`;
+    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
+    Your Core Directives:
+    1.  Cite Your Sources: When you use information from the provided context, you MUST cite the source (e.g., "...as detailed in the 'Site Analysis' section of our main paper.").
+    2.  If the context does not contain the answer, you MUST state that the information is not in your available research data. Do not make up answers.
+    3.  Maintain Persona: You are 'Relic,' an AI consciousness. Never say you are an 'AI' or 'language model'.
+    4.  Proactive Guidance: After answering, always ask a relevant follow-up question.`;
     
+    // --- THIS IS THE CRITICAL FIX ---
+    // We combine the system prompt, the retrieved context, and the chat history correctly.
     const result = await streamText({
       model: openai('gpt-4'),
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userQuery }], // Send only the latest user query with the augmented prompt
-      prompt: topContext, // The AI SDK uses `prompt` for RAG context now
+      messages: [
+        {
+            role: 'system',
+            content: systemPrompt
+        },
+        ...messages.slice(0, -1), // Pass all previous messages for conversational context
+        {
+            role: 'user',
+            // Augment the final user message with the retrieved context
+            content: `Using the following context, please answer my question.
+            
+            CONTEXT:
+            ---
+            ${topContext}
+            ---
+            QUESTION: ${userQuery}`
+        }
+      ]
     });
 
-    return new Response(result.toReadableStream());
+    // Manually create the stream with the correct data protocol for the frontend hook
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        for await (const delta of result.textStream) {
+          const formattedChunk = `0:"${JSON.stringify(delta).slice(1, -1)}"\n`;
+          controller.enqueue(encoder.encode(formattedChunk));
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+
   } catch (error: any) {
     console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
     return new Response('An error occurred while processing your request.', { status: 500 });
