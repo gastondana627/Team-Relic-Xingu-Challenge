@@ -3,12 +3,13 @@ import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
 import Chat from './components/Chat';
+import DocumentGallery from './components/DocumentGallery';
 
 const teamMembers = [
     {
-        name: "Gaston", // Updated
+        name: "Gaston",
         role: "Video, Documentation & Landing Page",
-        imageUrl: "/assets/Gaston.jpg", // Updated
+        imageUrl: "/assets/Gaston.jpg", 
         headline: "Digital Storyteller & Frontend Developer",
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
@@ -19,7 +20,7 @@ const teamMembers = [
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        imageUrl: "/assets/Chisom.jpg", // Verified
+        imageUrl: "/assets/Chisom.jpg", 
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
@@ -29,38 +30,39 @@ const teamMembers = [
     },
 ];
 
+// --- THIS ARRAY IS NOW FULLY CORRECTED ---
 const anomalies = [
   {
     id: 1,
-    title: "Anomaly #1: The Serpent Geoglyph",
+    title: "1.) The Strategic Upland Plateau",
     description: "A massive, winding earthwork suggesting a ceremonial path or symbolic representation.",
     image: "/assets/Anomaly 1 Basic Image.jpg",
     video: "/assets/Anomaly 1 Video of Area.mov",
   },
   {
     id: 2,
-    title: "Anomaly #2: The Sunken Courtyards",
+    title: "2.) The Network of Secondary Outposts",
     description: "Geometrically aligned rectangular depressions, pointing to a potential communal plaza.",
     image: "/assets/Anomaly_2_Image_of_Area_1.jpg",
     video: "/assets/Anomaly 2 Video of Area.mov",
   },
   {
     id: 3,
-    title: "Anomaly #3: The Ring Ditch",
+    title: "3.) The Elevated Travel Corridor",
     description: "A perfectly circular ditch, indicative of a fortified village, consistent with known settlements.",
     image: "/assets/Anomaly_3_Image_of_Area_1.jpg",
     video: "/assets/Anomaly 3 Video of Area.mov",
   },
   {
     id: 4,
-    title: "Anomaly #4: The Terrace Settlement",
+    title: "4.) The Terrace Settlement",
     description: "Our primary discovery: an extensive network of terraces suggesting a complex agricultural society.",
     image: "/assets/Anomaly_4_Image_of_Area_1.jpg",
     video: "/assets/Anomaly 4 Video of Area.mov",
   },
   {
     id: 5,
-    title: "Anomaly #5: The Causeway Remnant",
+    title: "5.) The Artificial Shoreline",
     description: "A linear feature identified through Lidar, likely a raised road connecting points of interest.",
     image: "/assets/Anomaly_5_Image_of_Area_1.jpg",
     video: "/assets/Anomaly 5 Video of Area.mov",
@@ -92,6 +94,15 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Document Gallery Section */}
+        <section id="document-gallery" className="document-gallery-section">
+          <h2>Satellite Document Archive</h2>
+          <p className="section-intro">
+            Explore our archive of satellite imagery analysis, Lidar scans, and topographical maps. Hover over any document to view details and open the full PDF.
+          </p>
+          <DocumentGallery />
+        </section>
+
         {/* Section 3: Evidence Locker */}
         <section id="evidence" className="evidence-section">
           <h2>The Evidence Locker</h2>
@@ -103,7 +114,7 @@ export default function HomePage() {
           </div>
         </section>
         
-        {/* This is the new Live AI Assistant section */}
+        {/* AI Assistant Section */}
         <section id="ai-insights" className="ai-insights-section">
           <h2>Talk to Our Expedition AI</h2>
           <p className="section-intro">
@@ -194,5 +205,4 @@ export default function HomePage() {
     </div>
   );
 }
-
 
