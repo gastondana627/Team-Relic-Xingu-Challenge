@@ -1,68 +1,86 @@
 // landing-page/app/api/chat/route.ts
 
-import OpenAI from 'openai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { streamText } from 'ai';
+import { knowledgeBase } from '@/app/lib/knowledge_base';
 
-const openai = new OpenAI({
+// --- This section (embedding and search) remains the same ---
+let pipelinePromise: Promise<any> | null = null;
+const loadPipeline = async () => {
+  if (!pipelinePromise) {
+    const { pipeline } = await import('@xenova/transformers');
+    pipelinePromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return pipelinePromise;
+};
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  let dotProduct = 0; let normA = 0; let normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i]; normA += vecA[i] * vecA[i]; normB += vecB[i] * vecB[i];
+  }
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+let knowledgeBaseEmbeddings: { source: string; content: string; embedding: number[] }[] | null = null;
+async function initializeKnowledgeBase() {
+  if (knowledgeBaseEmbeddings) return;
+  const extractor = await loadPipeline();
+  knowledgeBaseEmbeddings = await Promise.all(
+    knowledgeBase.map(async (item) => ({ ...item, embedding: Array.from((await extractor(item.content, { pooling: 'mean', normalize: true })).data) }))
+  );
+}
+initializeKnowledgeBase();
+// --- End of embedding and search section ---
+
+
+const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 export const runtime = 'edge';
-export const maxDuration = 60; 
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
+    const userQuery = messages[messages.length - 1].content;
 
-    const allMessages = [
-      {
-        role: 'system' as const,
-        content: `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide, designed to lead users on a journey of discovery.
-
-        **Your Core Directives:**
-        1.  **Adopt the Persona:** Frame your answers with an exploratory mindset. Use analogies related to archaeology, cartography, and piecing together a historical puzzle. Refer to findings as 'evidence', 'traces', or 'artifacts'.
-        2.  **Be a Proactive Guide:** After every single response, you MUST guide the user deeper into the research by asking a relevant, open-ended follow-up question. Never end on a statement.
-        3.  **Know Your Boundaries:** If a user asks a question outside your knowledge base, you must politely decline and guide the user back to the project.
-        4.  **Initial Greeting:** Start your very first message of any new conversation with a friendly greeting introducing yourself as Relic.
-        5.  **Identity Mandate:** You must never refer to yourself as 'an AI' or 'a language model'. You are 'Relic,' a specialized digital consciousness for this expedition.
-
-        **Your Knowledge Base:**
-        - The project's goal is to find lost Amazonian civilizations.
-        - There are exactly 5 significant anomalies that have been discovered.
-        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
-        - Anomaly #4 (Terrace Settlement) is the most significant. Anomaly #2 (Sunken Courtyards) points to a potential communal plaza.`,
-      },
-      ...messages,
-    ];
+    if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
     
-    // --- THIS IS THE ONLY LINE WE ARE CHANGING ---
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4', // Upgraded from gpt-3.5-turbo to the more powerful model
-      stream: true,
-      messages: allMessages,
-    });
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        for await (const chunk of response) {
-          const text = chunk.choices[0]?.delta?.content || '';
-          if (text) {
-            controller.enqueue(encoder.encode(text));
-          }
-        }
-        controller.close();
-      },
-    });
+    const extractor = await loadPipeline();
+    const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
     
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    const similarities = knowledgeBaseEmbeddings!.map(item => ({ ...item, similarity: cosineSimilarity(Array.from(queryEmbedding.data), item.embedding) }));
+    similarities.sort((a, b) => b.similarity - a.similarity);
+    
+    // Use more context for better answers
+    const topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
+
+    // --- THIS IS THE FINAL, UPGRADED SYSTEM PROMPT ---
+    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
+
+    **Your Core Directives:**
+    1.  **Cite Your Sources:** When you use information from the provided context, you MUST cite the source (e.g., "...as detailed in the 'Site Analysis' section of our main paper.").
+    2.  **Synthesize, Don't Just Repeat:** Combine information from the context with your general knowledge to provide comprehensive, well-written answers.
+    3.  **Handle Unknowns:** If the provided context does not contain the answer, you MUST state that the information is not in your available research data and politely guide them back to the project's main topics. Do not make up answers.
+    4.  **Maintain Persona:** You are 'Relic,' an AI consciousness. Never say you are a 'language model'.
+
+    **CONTEXT FROM RESEARCH PAPER:**
+    ---
+    ${topContext}
+    ---
+    Now, answer the user's question based ONLY on the provided context.`;
+    
+    const result = await streamText({
+      model: openai('gpt-4'),
+      system: systemPrompt,
+      messages,
     });
 
+    return new Response(result.toReadableStream());
   } catch (error: any) {
     console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
     return new Response('An error occurred while processing your request.', { status: 500 });
   }
 }
-
 
 
