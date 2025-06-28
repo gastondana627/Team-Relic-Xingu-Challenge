@@ -1,35 +1,8 @@
-import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
-import { knowledgeBase } from '@/app/lib/knowledge_base';
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
 
-// Embedding and search functions
-let pipelinePromise: Promise<any> | null = null;
-const loadPipeline = async () => {
-  if (!pipelinePromise) {
-    const { pipeline } = await import('@xenova/transformers');
-    pipelinePromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-  return pipelinePromise;
-};
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  let dotProduct = 0; let normA = 0; let normB = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i]; normA += vecA[i] * vecA[i]; normB += vecB[i] * vecB[i];
-  }
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-let knowledgeBaseEmbeddings: { source: string; content: string; embedding: number[] }[] | null = null;
-async function initializeKnowledgeBase() {
-  if (knowledgeBaseEmbeddings) return;
-  const extractor = await loadPipeline();
-  knowledgeBaseEmbeddings = await Promise.all(
-    knowledgeBase.map(async (item) => ({ ...item, embedding: Array.from((await extractor(item.content, { pooling: 'mean', normalize: true })).data) }))
-  );
-  console.log('Knowledge base embeddings initialized.');
-}
-initializeKnowledgeBase();
-
-const openai = createOpenAI({
+// Create an OpenAI API client
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -39,63 +12,45 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-    const userQuery = messages[messages.length - 1].content;
-    const lowerCaseQuery = userQuery.toLowerCase();
 
-    let topContext = '';
+    // The entire knowledge base is now placed directly in the system prompt.
+    // This is a simpler but still very effective method.
+    const allMessages = [
+      {
+        role: 'system' as const,
+        content: `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide.
 
-    // Hybrid search: Check for keywords first
-    if (lowerCaseQuery.includes('who is on') || lowerCaseQuery.includes('team member') || lowerCaseQuery.includes('the team')) {
-      topContext = knowledgeBase
-        .filter(item => item.source.startsWith('Team Roster'))
-        .map(item => `Source: ${item.source}\nContent: ${item.content}`)
-        .join('\n\n');
-    } else {
-      // Otherwise, perform semantic search
-      if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
-      const extractor = await loadPipeline();
-      const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
-      const similarities = knowledgeBaseEmbeddings!.map(item => ({ ...item, similarity: cosineSimilarity(Array.from(queryEmbedding.data), item.embedding) }));
-      similarities.sort((a, b) => b.similarity - a.similarity);
-      topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
-    }
+        **Your Core Directives:**
+        1.  **Adhere to Your Knowledge:** Base all your answers strictly on the information provided in this prompt.
+        2.  **Handle Unknowns:** If a user asks a question you cannot answer from your knowledge base, you must politely state that the information is outside the scope of your current data and guide them back to the project's topics.
+        3.  **Maintain Persona:** You are 'Relic,' a specialized digital consciousness. You must never refer to yourself as 'an AI' or 'a language model'.
+        4.  **Proactive Guidance:** After every single response, you MUST guide the user deeper by asking a relevant, open-ended follow-up question.
+        5.  **Initial Greeting:** Start your very first message of any new conversation with a friendly greeting, like: "Hello! I am Relic, the AI assistant for this expedition. How can I help you explore our findings?"
 
-    const result = await streamText({
-      model: openai('gpt-4'),
-      system: `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
-      **Your Core Directives:**
-      1.  **Cite Your Sources:** When you use information from the provided context, you MUST cite the source (e.g., "...as mentioned in (Source: Project Paper: Site Analysis)").
-      2.  **Handle Unknowns:** If the context does not contain the answer, you must state that the information is not in your available research data. Do not make up answers.
-      3.  **Maintain Persona:** You are 'Relic,' an AI consciousness. Never say you are an 'AI' or 'language model'.
-      4.  **Proactive Guidance:** After answering, always ask a relevant follow-up question.`,
-      messages: [
-        ...messages.slice(0, -1),
-        {
-            role: 'system',
-            content: `Here is some relevant context from my research documents to help you answer the user's next question:\n\n---CONTEXT---\n${topContext}\n---END CONTEXT---`
-        },
-        messages[messages.length - 1]
-      ]
-    });
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        for await (const delta of result.textStream) {
-          const formattedChunk = `0:"${JSON.stringify(delta).slice(1, -1)}"\n`;
-          controller.enqueue(encoder.encode(formattedChunk));
-        }
-        controller.close();
+        **Your Knowledge Base:**
+        - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil.
+        - Team Relic is composed of two primary members: Gaston (leads video, documentation, and web development) and Chisom (leads research and the final report).
+        - There are exactly 5 significant anomalies discovered.
+        - Anomaly 1: The Strategic Upland Plateau, a likely political or ritual center.
+        - Anomaly 2: The Network of Secondary Outposts, a system of smaller support villages.
+        - Anomaly 3: The Elevated Travel Corridor, a network of engineered roads.
+        - Anomaly 4: The Terrace Settlement, which shows evidence of intensive agriculture.
+        - Anomaly 5: The Artificial Shoreline, suggesting advanced water management and aquaculture.`,
       },
+      ...messages,
+    ];
+    
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      stream: true,
+      messages: allMessages,
     });
 
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
 
   } catch (error: any) {
     console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
     return new Response('An error occurred while processing your request.', { status: 500 });
   }
 }
-
