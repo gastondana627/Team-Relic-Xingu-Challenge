@@ -1,10 +1,8 @@
-// landing-page/app/api/chat/route.ts
-
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { knowledgeBase } from '@/app/lib/knowledge_base';
 
-// --- Embedding and search functions (no changes here) ---
+// Embedding and search functions
 let pipelinePromise: Promise<any> | null = null;
 const loadPipeline = async () => {
   if (!pipelinePromise) {
@@ -30,8 +28,6 @@ async function initializeKnowledgeBase() {
   console.log('Knowledge base embeddings initialized.');
 }
 initializeKnowledgeBase();
-// --- End of setup code ---
-
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -55,7 +51,7 @@ export async function POST(req: Request) {
         .map(item => `Source: ${item.source}\nContent: ${item.content}`)
         .join('\n\n');
     } else {
-      // Otherwise, perform semantic search for all other queries
+      // Otherwise, perform semantic search
       if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
       const extractor = await loadPipeline();
       const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
@@ -64,38 +60,24 @@ export async function POST(req: Request) {
       topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
     }
 
-    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
-    Your Core Directives:
-    1.  Cite Your Sources: When you use information from the provided context, you MUST cite the source (e.g., "...as detailed in the 'Site Analysis' section of our main paper.").
-    2.  If the context does not contain the answer, you MUST state that the information is not in your available research data. Do not make up answers.
-    3.  Maintain Persona: You are 'Relic,' an AI consciousness. Never say you are an 'AI' or 'language model'.
-    4.  Proactive Guidance: After answering, always ask a relevant follow-up question.`;
-    
-    // --- THIS IS THE CRITICAL FIX ---
-    // We combine the system prompt, the retrieved context, and the chat history correctly.
     const result = await streamText({
       model: openai('gpt-4'),
+      system: `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
+      **Your Core Directives:**
+      1.  **Cite Your Sources:** When you use information from the provided context, you MUST cite the source (e.g., "...as mentioned in (Source: Project Paper: Site Analysis)").
+      2.  **Handle Unknowns:** If the context does not contain the answer, you must state that the information is not in your available research data. Do not make up answers.
+      3.  **Maintain Persona:** You are 'Relic,' an AI consciousness. Never say you are an 'AI' or 'language model'.
+      4.  **Proactive Guidance:** After answering, always ask a relevant follow-up question.`,
       messages: [
+        ...messages.slice(0, -1),
         {
             role: 'system',
-            content: systemPrompt
+            content: `Here is some relevant context from my research documents to help you answer the user's next question:\n\n---CONTEXT---\n${topContext}\n---END CONTEXT---`
         },
-        ...messages.slice(0, -1), // Pass all previous messages for conversational context
-        {
-            role: 'user',
-            // Augment the final user message with the retrieved context
-            content: `Using the following context, please answer my question.
-            
-            CONTEXT:
-            ---
-            ${topContext}
-            ---
-            QUESTION: ${userQuery}`
-        }
+        messages[messages.length - 1]
       ]
     });
 
-    // Manually create the stream with the correct data protocol for the frontend hook
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -116,5 +98,4 @@ export async function POST(req: Request) {
     return new Response('An error occurred while processing your request.', { status: 500 });
   }
 }
-
 
