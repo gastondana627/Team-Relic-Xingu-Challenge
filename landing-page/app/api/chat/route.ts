@@ -4,7 +4,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { knowledgeBase } from '@/app/lib/knowledge_base';
 
-// --- This section (embedding and search) remains the same ---
+// --- All the setup code for embeddings and search remains the same ---
 let pipelinePromise: Promise<any> | null = null;
 const loadPipeline = async () => {
   if (!pipelinePromise) {
@@ -29,7 +29,7 @@ async function initializeKnowledgeBase() {
   );
 }
 initializeKnowledgeBase();
-// --- End of embedding and search section ---
+// --- End of setup code ---
 
 
 const openai = createOpenAI({
@@ -43,37 +43,36 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     const userQuery = messages[messages.length - 1].content;
+    const lowerCaseQuery = userQuery.toLowerCase();
 
-    if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
-    
-    const extractor = await loadPipeline();
-    const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
-    
-    const similarities = knowledgeBaseEmbeddings!.map(item => ({ ...item, similarity: cosineSimilarity(Array.from(queryEmbedding.data), item.embedding) }));
-    similarities.sort((a, b) => b.similarity - a.similarity);
-    
-    // Use more context for better answers
-    const topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
+    let topContext = '';
 
-    // --- THIS IS THE FINAL, UPGRADED SYSTEM PROMPT ---
-    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant for Team Relic. Your goal is to answer questions accurately by synthesizing information from the provided context, which is taken directly from the team's main research paper.
+    // --- THIS IS THE NEW HYBRID LOGIC ---
+    // If the query is about the team, force the correct context.
+    if (lowerCaseQuery.includes('who') || lowerCaseQuery.includes('team') || lowerCaseQuery.includes('member')) {
+      console.log('Keyword match found: Forcing team context.');
+      topContext = knowledgeBase
+        .filter(item => item.source.startsWith('Team Roster'))
+        .map(item => `Source: ${item.source}\nContent: ${item.content}`)
+        .join('\n\n');
+    } else {
+      // Otherwise, use the smart semantic search for all other questions.
+      console.log('No keyword match: Using semantic search.');
+      if (!knowledgeBaseEmbeddings) await initializeKnowledgeBase();
+      const extractor = await loadPipeline();
+      const queryEmbedding = await extractor(userQuery, { pooling: 'mean', normalize: true });
+      const similarities = knowledgeBaseEmbeddings!.map(item => ({ ...item, similarity: cosineSimilarity(Array.from(queryEmbedding.data), item.embedding) }));
+      similarities.sort((a, b) => b.similarity - a.similarity);
+      topContext = similarities.slice(0, 3).map(item => `Source: ${item.source}\nContent: ${item.content}`).join('\n\n');
+    }
 
-    **Your Core Directives:**
-    1.  **Cite Your Sources:** When you use information from the provided context, you MUST cite the source (e.g., "...as detailed in the 'Site Analysis' section of our main paper.").
-    2.  **Synthesize, Don't Just Repeat:** Combine information from the context with your general knowledge to provide comprehensive, well-written answers.
-    3.  **Handle Unknowns:** If the provided context does not contain the answer, you MUST state that the information is not in your available research data and politely guide them back to the project's main topics. Do not make up answers.
-    4.  **Maintain Persona:** You are 'Relic,' an AI consciousness. Never say you are a 'language model'.
-
-    **CONTEXT FROM RESEARCH PAPER:**
-    ---
-    ${topContext}
-    ---
-    Now, answer the user's question based ONLY on the provided context.`;
+    const systemPrompt = `You are 'Relic', a highly advanced AI research assistant... (Your full system prompt from the previous step goes here)`;
     
     const result = await streamText({
       model: openai('gpt-4'),
       system: systemPrompt,
-      messages,
+      messages: [{ role: 'user', content: userQuery }], // Send only the latest user query with the augmented prompt
+      prompt: topContext, // The AI SDK uses `prompt` for RAG context now
     });
 
     return new Response(result.toReadableStream());
