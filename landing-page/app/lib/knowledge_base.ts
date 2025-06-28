@@ -12,7 +12,7 @@ interface Knowledge {
     },
     {
       source: "Project Paper: Anomaly 1 - Strategic Upland Plateau",
-      content: "Function: This large, high-elevation plateau (-15.07, -56.13) likely served as a primary political, economic, and ritual center—a 'capital' for a major regional polity. Its strategic elevation suggests defensive advantages. Age: Hypothesized to be from the Late Holocene, roughly AD 1000-1600, based on similar 'galactic clusters' in the Upper Xingu. Reference: Heckenberger (Amazonia 1492)."
+      content: "Function: This large, high-elevation plateau (-15.07, -56.13) likely served as a primary political, economic, and ritual center—a 'capital' for a major regional polity. Its strategic elevation suggests defensive advantages. Age: Hypothesized to be from the Late Holocene, roughly AD 1000-1600. Reference: Heckenberger (Amazonia 1492)."
     },
     {
       source: "Project Paper: Anomaly 2 - Network of Secondary Outposts",
@@ -34,4 +34,13 @@ interface Knowledge {
       source: "Project Paper: Proposed Future Work",
       content: "The real job ahead requires collaborative fieldwork, including ground-truthing our findings, high-resolution mapping with local partners, targeted test excavations, and integrating ethnoarchaeological research with Indigenous knowledge."
     },
+    // --- NEW TEAM MEMBER INFORMATION ADDED BELOW ---
+    {
+      source: "Team Roster: Gaston",
+      content: "Gaston (GasMan) is the lead on Video Production, Documentation Consolidation, and Frontend Development for Team Relic. He is a Digital Storyteller passionate about weaving compelling narratives from complex data and bringing the team's discoveries to life through visual media and an interactive web experience."
+    },
+    {
+      source: "Team Roster: Chisom",
+      content: "Chisom is the Lead Researcher for Team Relic and is responsible for the final PDF Report and Document Review. Her focus is on ensuring the accuracy, clarity, and impact of the team's findings by translating raw data into a professional, evidence-based report."
+    }
   ];
