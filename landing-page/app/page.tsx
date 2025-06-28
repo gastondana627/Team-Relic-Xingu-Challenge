@@ -9,7 +9,7 @@ const teamMembers = [
     {
         name: "Gaston",
         role: "Video, Documentation & Landing Page",
-        imageUrl: "/assets/Gaston.jpg", 
+        imageUrl: "/assets/Gaston.jpg",
         headline: "Digital Storyteller & Frontend Developer",
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
@@ -20,7 +20,7 @@ const teamMembers = [
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        imageUrl: "/assets/Chisom.jpg", 
+        imageUrl: "/assets/Chisom.jpg",
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
@@ -30,7 +30,6 @@ const teamMembers = [
     },
 ];
 
-// --- THIS ARRAY IS NOW FULLY CORRECTED ---
 const anomalies = [
   {
     id: 1,
@@ -205,4 +204,3 @@ export default function HomePage() {
     </div>
   );
 }
-
