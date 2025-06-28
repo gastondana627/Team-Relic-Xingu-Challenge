@@ -2,13 +2,13 @@ import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
-import Chat from './components/Chat'; // Import the new Chat component
+import Chat from './components/Chat';
 
 const teamMembers = [
     {
-        name: "GasMan",
+        name: "Gaston", // Updated
         role: "Video, Documentation & Landing Page",
-        imageUrl: "/assets/Gasman.jpg",
+        imageUrl: "/assets/Gaston.jpg", // Updated
         headline: "Digital Storyteller & Frontend Developer",
         bio: "Passionate about weaving compelling narratives from complex data. Responsible for bringing Team Relic&apos;s discoveries to life through visual media and an interactive web experience.",
         socials: {
@@ -19,7 +19,7 @@ const teamMembers = [
     {
         name: "Chisom",
         role: "PDF Report & Document Review",
-        imageUrl: "/assets/Chisom.jpg",
+        imageUrl: "/assets/Chisom.jpg", // Verified
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
         socials: {
