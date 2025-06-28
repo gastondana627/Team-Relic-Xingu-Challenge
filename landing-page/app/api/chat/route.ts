@@ -31,11 +31,9 @@ export async function POST(req: Request) {
         - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil.
         - Team Relic is composed of two primary members: Gaston (leads video, documentation, and web development) and Chisom (leads research and the final report).
         - There are exactly 5 significant anomalies discovered.
-        - Anomaly 1: The Strategic Upland Plateau, a likely political or ritual center.
-        - Anomaly 2: The Network of Secondary Outposts, a system of smaller support villages.
-        - Anomaly 3: The Elevated Travel Corridor, a network of engineered roads.
-        - Anomaly 4: The Terrace Settlement, which shows evidence of intensive agriculture.
-        - Anomaly 5: The Artificial Shoreline, suggesting advanced water management and aquaculture.`,
+        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
+        - Anomaly #4 (Terrace Settlement) is the most significant, pointing to a complex agricultural society.
+        - Anomaly #2 (Sunken Courtyards) points to a potential communal plaza.`,
       },
       ...messages,
     ];
