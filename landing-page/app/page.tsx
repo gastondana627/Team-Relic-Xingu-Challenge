@@ -23,13 +23,15 @@ const teamMembers = [
         imageUrl: "/assets/Chisom.jpg",
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
+        // This 'socials' object is now updated
         socials: {
             linkedin: "https://www.linkedin.com/in/chisom-aniekwensi/",
-            twitter: "https://twitter.com/their-handle",
+            github: "https://github.com/somanie",
         }
     },
 ];
 
+// --- The rest of the file remains unchanged ---
 const anomalies = [
   {
     id: 1,
@@ -71,7 +73,6 @@ const anomalies = [
 export default function HomePage() {
   return (
     <div className="container">
-      {/* Section 1: Hero */}
       <header className="hero">
         <video className="hero-video" autoPlay loop muted playsInline>
           <source src="/assets/Relic_Animation_1.mp4" type="video/mp4" />
@@ -84,7 +85,6 @@ export default function HomePage() {
       </header>
 
       <main>
-        {/* Section 2: Anomaly Showcase */}
         <section id="expedition" className="expedition-section">
           <h2>The Expedition Log</h2>
           <p className="section-intro">Our team of digital explorers has analyzed vast open-source datasets to uncover five significant anomalies. Each discovery below is a potential piece of a lost civilization's story, verified through multiple analytical methods and powered by OpenAI.</p>
@@ -93,7 +93,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Document Gallery Section */}
         <section id="document-gallery" className="document-gallery-section">
           <h2>Satellite Document Archive</h2>
           <p className="section-intro">
@@ -102,7 +101,6 @@ export default function HomePage() {
           <DocumentGallery />
         </section>
 
-        {/* Section 3: Evidence Locker */}
         <section id="evidence" className="evidence-section">
           <h2>The Evidence Locker</h2>
           <p className="section-intro">Reproducibility and transparency are core to our findings. Here, we present the methodology, code, and AI-driven analysis that form the foundation of our discoveries.</p>
@@ -113,7 +111,6 @@ export default function HomePage() {
           </div>
         </section>
         
-        {/* AI Assistant Section */}
         <section id="ai-insights" className="ai-insights-section">
           <h2>Talk to Our Expedition AI</h2>
           <p className="section-intro">
@@ -122,7 +119,6 @@ export default function HomePage() {
           <Chat />
         </section>
         
-        {/* Section 4: Project Timeline */}
         <section id="timeline" className="timeline-section">
             <h2>Our 3-Day Sprint to Victory</h2>
             <p className="section-intro">A clear plan and parallel execution were key to our success.</p>
@@ -154,7 +150,6 @@ export default function HomePage() {
             </div>
         </section>
 
-        {/* Section 5: Meet The Team */}
         <section id="team" className="team-section">
             <h2>Meet The Digital Explorers</h2>
             <div className="team-grid">
@@ -162,7 +157,6 @@ export default function HomePage() {
             </div>
         </section>
 
-        {/* Section 6: Competition & Rules */}
         <section id="rules" className="rules-section">
             <h2>Competition Compliance</h2>
             <RulesAccordion title="Mission & Judging Criteria">
@@ -174,7 +168,6 @@ export default function HomePage() {
             </RulesAccordion>
         </section>
 
-        {/* Project Links Section */}
         <section id="links" className="project-links-section">
           <h2>Project Links & Repository</h2>
           <div className="links-grid">
@@ -198,9 +191,14 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <p>&copy; 2025 Team Relic - OpenAI to Z Challenge</p>
+        <p>&copy; 2025 Team Relic - OpenAI to Z Challenge!</p>
         <a href="https://github.com/gastondana627" target="_blank" rel="noopener noreferrer">View on GitHub</a>
       </footer>
     </div>
   );
 }
+
+
+
+
+
