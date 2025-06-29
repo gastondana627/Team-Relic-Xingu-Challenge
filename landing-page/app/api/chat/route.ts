@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { OpenAIStream, StreamingTextResponse } from 'ai';
 
 // Create an OpenAI API client
 const openai = new OpenAI({
@@ -38,19 +37,36 @@ export async function POST(req: Request) {
       ...messages,
     ];
     
+    // Get a stream directly from the OpenAI API
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       stream: true,
       messages: allMessages,
     });
 
-    const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
+    // Manually create a standard ReadableStream from the OpenAI response
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        for await (const chunk of response) {
+          const text = chunk.choices[0]?.delta?.content || '';
+          if (text) {
+            controller.enqueue(encoder.encode(text));
+          }
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
 
   } catch (error: any) {
     console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
     return new Response('An error occurred while processing your request.', { status: 500 });
   }
 }
+
 
 

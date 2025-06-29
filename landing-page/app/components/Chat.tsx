@@ -31,7 +31,6 @@ export default function Chat() {
     setMessages(newMessages);
     setInput('');
 
-    // Add a placeholder for the AI response
     setMessages(prev => [...prev, { role: 'assistant', content: '...' }]);
 
     try {
@@ -55,28 +54,20 @@ export default function Chat() {
 
         aiMessageContent += decoder.decode(value, { stream: true });
         
-        // Update the last message (the AI's response) with the new content
         setMessages(prev => {
           const lastMessage = prev[prev.length - 1];
           if (lastMessage && lastMessage.role === 'assistant') {
-            return [
-              ...prev.slice(0, -1),
-              { ...lastMessage, content: aiMessageContent }
-            ];
+            return [ ...prev.slice(0, -1), { ...lastMessage, content: aiMessageContent } ];
           }
           return prev;
         });
       }
     } catch (error) {
       console.error("Failed to get AI response:", error);
-      // Update the placeholder with an error message
       setMessages(prev => {
         const lastMessage = prev[prev.length - 1];
         if (lastMessage && lastMessage.role === 'assistant') {
-          return [
-            ...prev.slice(0, -1),
-            { ...lastMessage, content: 'Sorry, an error occurred.' }
-          ];
+          return [ ...prev.slice(0, -1), { ...lastMessage, content: 'Sorry, an error occurred.' } ];
         }
         return prev;
       });
