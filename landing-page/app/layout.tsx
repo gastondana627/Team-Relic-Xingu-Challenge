@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
-// --- THIS IS THE UPDATED METADATA ---
+// This is the updated metadata for your project
 export const metadata: Metadata = {
-  title: "Relic",
+  title: "Team Relic - The Xingu Discovery",
   description: "An AI-enhanced archaeological survey into the Amazon, submitted for the OpenAI to Z Challenge.",
 };
 
@@ -17,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      {/* The body no longer needs the custom font variables from the default template */}
+      <body>{children}</body>
     </html>
   );
 }
+
+
+
