@@ -27,7 +27,7 @@ interface Knowledge {
     },
     {
       source: "Project Paper: Anomaly 2 - The Network of Secondary Outposts",
-      content: "Function & Location: Located at points like (-14.95, -55.85), these smaller villages represent an integrated regional settlement system. Age: Co-temporal with core settlements, AD 1000-1600."
+      content: "Function & Location: Located at points like (-14.95, -55.85), these smaller villages represent an integrated regional settlement system, serving as strategic outposts."
     },
     {
       source: "Project Paper: Anomaly 3 - The Elevated Travel Corridor",
@@ -42,22 +42,26 @@ interface Knowledge {
       content: "Function & Location: These engineered modifications to lake shores at (~ -12.12, -53.42) suggest advanced water management and aquaculture."
     },
     
-    // --- OFFICIAL REFERENCES ---
+    // --- THIS IS THE NEW INFORMATION: OFFICIAL REFERENCES ---
     {
-      source: "Reference [1]",
-      content: "Heckenberger, Michael J., et al. 'Amazonia 1492: Pristine Forest or Cultural Parkland?' ResearchGate."
+      source: "Official Reference [1]",
+      content: "Heckenberger, Michael J., et al. 'Amazonia 1492: Pristine Forest or Cultural Parkland?,' Research gate."
     },
     {
-      source: "Reference [2]",
+      source: "Official Reference [2]",
       content: "Heckenberger, M. J. 'The Ecology of Power: Culture, Place, and Personhood in the Southern Amazon, A.D. 1000-2000.' Routledge, 2005."
     },
     {
-      source: "Reference [3]",
+      source: "Official Reference [3]",
       content: "Rostain, Stéphen, et al. 'Two thousand years of garden urbanism in the Upper Amazon.' ResearchGate."
     },
     {
-      source: "Reference [4] & [5]",
-      content: "Loughlin, N. J., et al. and Goldberg, Sam, et al. on land-use change and widespread Amazonian dark earth."
+      source: "Official Reference [4]",
+      content: "Loughlin, N. J., et al. 'Insights into past land-use and vegetation change in the Llanos de Moxos (Bolivia) using fungal non-pollen palynomorphs,' Journal of Archaeological Science."
+    },
+    {
+      source: "Official Reference [5]",
+      content: "Goldberg, Sam, et al. 'Widespread Amazonian dark earth in the Xingu Indigenous Territory.' ResearchGate."
     },
   
     // --- COMPETITION INFO ---
@@ -67,14 +71,6 @@ interface Knowledge {
     },
     {
       source: "Competition Overview: Evaluation Criteria",
-      content: "Submissions are graded on five key criteria, each worth 20 points: Evidence Depth, Clarity, Reproducibility, Novelty, and Presentation Craft."
-    },
-    // --- THIS IS THE NEW INFORMATION ---
-    {
-      source: "Competition Rules: Official Link",
-      content: "The official URL for the OpenAI to Z Challenge is www.kaggle.com/competitions/openai-to-z-challenge/overview"
+      content: "Submissions are graded on five key criteria: Evidence Depth, Clarity, Reproducibility, Novelty, and Presentation Craft."
     }
   ];
-  
-
-
