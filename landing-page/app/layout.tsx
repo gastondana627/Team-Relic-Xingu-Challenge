@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 // --- THIS IS THE UPDATED METADATA ---
 export const metadata: Metadata = {
-  title: "Team Relic - The Xingu Discovery",
+  title: "Relic",
   description: "An AI-enhanced archaeological survey into the Amazon, submitted for the OpenAI to Z Challenge.",
 };
 
