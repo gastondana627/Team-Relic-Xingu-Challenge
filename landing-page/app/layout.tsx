@@ -14,11 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* The body no longer needs the custom font variables from the default template */}
+      {/* The body no longer needs the custom font variables */}
       <body>{children}</body>
     </html>
   );
 }
-
-
 
