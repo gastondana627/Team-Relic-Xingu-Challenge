@@ -3,7 +3,9 @@
 
 This repository contains the complete research, source code, and documentation for Team Relic's submission. Our project is presented as a fully interactive website, which serves as our primary demonstration.
 
-**Live Project Demo:** **[https://relic-openai-to-z-challenge.tech](https://relic-openai-to-z-challenge.tech)**
+**Live Project Demo:** **[https://relic-openai-to-z-challenge.tech]
+Link 1 - > (https://relic-openai-to-z-challenge.tech)
+Link 2 -> (https://team-relic-xingu-challenge.vercel.app)**
 
 ---
 
