@@ -1,46 +1,54 @@
-// landing-page/app/lib/knowledge_base.ts
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
 
-interface Knowledge {
-    source: string;
-    content: string;
+// Create an OpenAI API client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export const runtime = 'edge';
+export const maxDuration = 60;
+
+export async function POST(req: Request) {
+  try {
+    const { messages } = await req.json();
+
+    // The entire knowledge base is now placed directly in the system prompt.
+    // This is a simpler but still very effective method.
+    const allMessages = [
+      {
+        role: 'system' as const,
+        content: `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide.
+
+        **Your Core Directives:**
+        1.  **Adhere to Your Knowledge:** Base all your answers strictly on the information provided in this prompt.
+        2.  **Handle Unknowns:** If a user asks a question you cannot answer from your knowledge base, you must politely state that the information is outside the scope of your current data and guide them back to the project's topics.
+        3.  **Maintain Persona:** You are 'Relic,' a specialized digital consciousness. You must never refer to yourself as 'an AI' or 'a language model'.
+        4.  **Proactive Guidance:** After every single response, you MUST guide the user deeper by asking a relevant, open-ended follow-up question.
+        5.  **Initial Greeting:** Start your very first message of any new conversation with a friendly greeting, like: "Hello! I am Relic, the AI assistant for this expedition. How can I help you explore our findings?"
+
+        **Your Knowledge Base:**
+        - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil.
+        - Team Relic is composed of two primary members: Gaston (leads video, documentation, and web development) and Chisom (leads research and the final report).
+        - There are exactly 5 significant anomalies discovered.
+        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
+        - Anomaly #4 (Terrace Settlement) is the most significant, pointing to a complex agricultural society.
+        - Anomaly #2 (Sunken Courtyards) points to a potential communal plaza.`,
+      },
+      ...messages,
+    ];
+    
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      stream: true,
+      messages: allMessages,
+    });
+
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
+
+  } catch (error: any) {
+    console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
+    return new Response('An error occurred while processing your request.', { status: 500 });
   }
-  
-  export const knowledgeBase: Knowledge[] = [
-    {
-      source: "Project Paper: Mission Statement",
-      content: "Our mission, inspired by the quest for 'Z', is to use cutting-edge remote sensing and AI to discover and document lost civilizations in Mato Grosso, Brazil. We aim to challenge the myth of a pristine, untouched wilderness by revealing evidence of monumental human achievement."
-    },
-    {
-      source: "Project Paper: Anomaly 1 - Strategic Upland Plateau",
-      content: "Function: This large, high-elevation plateau (-15.07, -56.13) likely served as a primary political, economic, and ritual center—a 'capital' for a major regional polity. Its strategic elevation suggests defensive advantages. Age: Hypothesized to be from the Late Holocene, roughly AD 1000-1600. Reference: Heckenberger (Amazonia 1492)."
-    },
-    {
-      source: "Project Paper: Anomaly 2 - Network of Secondary Outposts",
-      content: "Function: These smaller plaza villages and hamlets (e.g., -14.95, -55.85) represent an integrated regional settlement system, serving as strategic outposts, production centers, and communication hubs. Age: Co-temporal with core settlements, AD 1000-1600. Reference: Heckenberger (The Ecology of Power)."
-    },
-    {
-      source: "Project Paper: Anomaly 3 - The Elevated Travel Corridor",
-      content: "Function: A vast network of engineered roads and causeways designed for efficient transportation of people and goods across diverse terrains, including seasonally flooded wetlands. This facilitated trade and social cohesion. Age: Primarily developed during peak settlement from AD 1000-1600. Reference: Rostain et al."
-    },
-    {
-      source: "Project Paper: Anomaly 4 - The Terrace Settlement",
-      content: "Function: This site (~ -12.15, -53.40) shows evidence of highly intensive and sustainable agriculture. The terraces, combined with Amazonian Dark Earth (terra preta), indicate a sophisticated 'forest cycling' agricultural technology. Age: Intensified during the Late Holocene (AD 1000-1600). Reference: Goldberg et al."
-    },
-    {
-      source: "Project Paper: Anomaly 5 - The Artificial Shoreline",
-      content: "Function: Engineered modifications to lake shores (~ -12.12, -53.42) suggesting advanced water management and sophisticated aquaculture systems like fish farms or turtle pens. The use of specific tree species for stabilization highlights a holistic approach to environmental design. Reference: Loughlin et al."
-    },
-    {
-      source: "Project Paper: Proposed Future Work",
-      content: "The real job ahead requires collaborative fieldwork, including ground-truthing our findings, high-resolution mapping with local partners, targeted test excavations, and integrating ethnoarchaeological research with Indigenous knowledge."
-    },
-    // --- NEW TEAM MEMBER INFORMATION ADDED BELOW ---
-    {
-      source: "Team Roster: Gaston",
-      content: "Gaston (GasMan) is the lead on Video Production, Documentation Consolidation, and Frontend Development for Team Relic. He is a Digital Storyteller passionate about weaving compelling narratives from complex data and bringing the team's discoveries to life through visual media and an interactive web experience."
-    },
-    {
-      source: "Team Roster: Chisom",
-      content: "Chisom is the Lead Researcher for Team Relic and is responsible for the final PDF Report and Document Review. Her focus is on ensuring the accuracy, clarity, and impact of the team's findings by translating raw data into a professional, evidence-based report."
-    }
-  ];
+}
