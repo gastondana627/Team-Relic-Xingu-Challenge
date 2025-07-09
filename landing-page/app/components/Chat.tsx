@@ -1,13 +1,10 @@
 "use client";
 
-import { useChat } from 'ai/react'; // Import the official hook
+import { useChat } from 'ai/react'; // This is the official hook we need
 
 export default function Chat() {
-  // The useChat hook handles all the complex logic for you:
-  // - Managing the message history
-  // - Handling user input
-  // - Sending the form data to your API
-  // - Decoding the streaming response correctly
+  // This one line replaces all the manual code. It handles everything,
+  // including decoding the stream correctly.
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
 
   return (
