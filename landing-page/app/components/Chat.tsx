@@ -19,6 +19,7 @@ export default function Chat() {
   }, [messages]);
 
   const customHandleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     handleSubmit(e);
   };
 
