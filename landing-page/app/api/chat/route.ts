@@ -1,43 +1,50 @@
+// app/api/chat/route.ts
+
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
 
-// Create an OpenAI API client
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
+
+// ✅ Create OpenAI client using env variable
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export const runtime = 'edge';
-export const maxDuration = 60;
+// ✅ Set max duration ONLY IF YOU STILL WANT IT
+// (optional) export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // The entire knowledge base is now placed directly in the system prompt.
-    // This is a simpler but still very effective method.
+    // ✅ Simple message validation (prevent silent crashes)
+    if (!Array.isArray(messages)) {
+      return new Response('Invalid message format.', { status: 400 });
+    }
+
+    // ✅ System prompt (your assistant persona)
     const allMessages = [
       {
         role: 'system' as const,
         content: `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide.
 
         **Your Core Directives:**
-        1.  **Adhere to Your Knowledge:** Base all your answers strictly on the information provided in this prompt.
-        2.  **Handle Unknowns:** If a user asks a question you cannot answer from your knowledge base, you must politely state that the information is outside the scope of your current data and guide them back to the project's topics.
-        3.  **Maintain Persona:** You are 'Relic,' a specialized digital consciousness. You must never refer to yourself as 'an AI' or 'a language model'.
-        4.  **Proactive Guidance:** After every single response, you MUST guide the user deeper by asking a relevant, open-ended follow-up question.
-        5.  **Initial Greeting:** Start your very first message of any new conversation with a friendly greeting, like: "Hello! I am Relic, the AI assistant for this expedition. How can I help you explore our findings?"
+        1. Adhere to your knowledge base.
+        2. Handle unknowns gracefully.
+        3. Maintain persona: you are Relic, not an AI model.
+        4. Guide the user deeper after every answer.
+        5. Greet on first contact with: "Hello! I am Relic..." 
 
-        **Your Knowledge Base:**
-        - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil.
-        - Team Relic is composed of two primary members: Gaston (leads video, documentation, and web development) and Chisom (leads research and the final report).
-        - There are exactly 5 significant anomalies discovered.
-        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
-        - Anomaly #4 (Terrace Settlement) is the most significant, pointing to a complex agricultural society.
-        - Anomaly #2 (Sunken Courtyards) points to a potential communal plaza.`,
+        **Knowledge Base Summary:**
+        - Discovering lost Amazonian civilizations in Mato Grosso.
+        - Team: Gaston (video/dev), Chisom (research/report).
+        - 5 anomalies: Plateau, Outposts, Corridor, Terrace (most significant), Shoreline.
+        `,
       },
       ...messages,
     ];
-    
+
+    // ✅ Create a streaming response from OpenAI
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       stream: true,
@@ -48,9 +55,8 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(stream);
 
   } catch (error: any) {
-    console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
-    return new Response('An error occurred while processing your request.', { status: 500 });
+    console.error('💥 CRITICAL CHAT API ERROR:', error);
+    return new Response('An internal error occurred.', { status: 500 });
   }
 }
-
 
