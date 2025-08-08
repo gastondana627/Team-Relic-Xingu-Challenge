@@ -18,6 +18,7 @@ export default function Chat() {
     }
   }, [messages]);
 
+  // This is the updated function
   const customHandleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e);
@@ -28,29 +29,20 @@ export default function Chat() {
   }
 
   return (
-    // This container uses your custom CSS class now
     <div className="chat-container">
-      
       <div ref={chatContainerRef} className="chat-messages">
-        {messages.length > 0 ? (
-          messages.map(m => (
-            <div
-              key={m.id}
-              // This logic correctly places the bubbles
-              className={m.role === 'user' ? 'user-bubble message-bubble' : 'ai-bubble message-bubble'}
-            >
-              <strong>{m.role === 'user' ? 'You' : 'Relic'}</strong>
-              <p>{m.content}</p>
-            </div>
-          ))
-        ) : (
-          <div className="text-center text-[#a8a192] flex flex-col justify-center items-center h-full">
-             {/* Welcome message appears here */}
+        {messages.map(m => (
+          <div
+            key={m.id}
+            className={m.role === 'user' ? 'user-bubble message-bubble' : 'ai-bubble message-bubble'}
+          >
+            <strong>{m.role === 'user' ? 'You:' : 'Relic:'}</strong>
+            <p>{m.content}</p>
           </div>
-        )}
+        ))}
         {isLoading && (
-          <div className="ai-bubble">
-            <strong>Relic</strong>
+          <div className="ai-bubble message-bubble">
+            <strong>Relic:</strong>
             <div className="flex items-center space-x-2 pt-2">
               <span className="h-2 w-2 bg-[#c7a44a] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
               <span className="h-2 w-2 bg-[#c7a44a] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -59,8 +51,8 @@ export default function Chat() {
           </div>
         )}
       </div>
-
-      {/* This form and its children now use your custom CSS classes */}
+      
+      {/* The onSubmit event is handled here */}
       <form onSubmit={customHandleSubmit} className="chat-form">
         <input
           className="chat-input"
