@@ -1,76 +1,54 @@
-// landing-page/app/lib/knowledge_base.ts
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
 
-interface Knowledge {
-    source: string;
-    content: string;
-  }
-  
-  export const knowledgeBase: Knowledge[] = [
-    // --- CORE PROJECT INFO ---
-    {
-      source: "Team Relic Mission Statement",
-      content: "Team Relic's mission is to uncover new, undocumented evidence of ancient landscapes in the Amazon's Xingu River headwaters using a novel 'dual wield' approach combining Gemini's visual analysis with targeted GPT-4o API prompts."
-    },
-    {
-      source: "Team Roster: Gaston",
-      content: "Gaston is the lead on Video Production, Documentation Consolidation, and Frontend Development for Team Relic. He is a Digital Storyteller passionate about bringing the team's discoveries to life."
-    },
-    {
-      source: "Team Roster: Chisom",
-      content: "Chisom is the Lead Researcher for Team Relic and is responsible for the final PDF Report and Document Review, ensuring accuracy and clarity."
-    },
-  
-    // --- ANOMALY DETAILS ---
-    {
-      source: "Project Paper: Anomaly 1 - The Strategic Upland Plateau",
-      content: "Function & Location: Located at (-15.07, -56.13), this large, high-elevation plateau likely served as a primary political, economic, and ritual center. Age: Hypothesized to be from the Late Holocene, AD 1000-1600."
-    },
-    {
-      source: "Project Paper: Anomaly 2 - The Network of Secondary Outposts",
-      content: "Function & Location: Located at points like (-14.95, -55.85), these smaller villages represent an integrated regional settlement system, serving as strategic outposts."
-    },
-    {
-      source: "Project Paper: Anomaly 3 - The Elevated Travel Corridor",
-      content: "Function & Location: This feature is a vast network of engineered roads and causeways for efficient transportation, likely from the peak settlement period of AD 1000-1600."
-    },
-    {
-      source: "Project Paper: Anomaly 4 - The Terrace Settlement",
-      content: "Function & Location: Located at (~ -12.15, -53.40), this site shows evidence of intensive agriculture with terraces and Amazonian Dark Earth (terra preta)."
-    },
-    {
-      source: "Project Paper: Anomaly 5 - The Artificial Shoreline",
-      content: "Function & Location: These engineered modifications to lake shores at (~ -12.12, -53.42) suggest advanced water management and aquaculture."
-    },
+// Create an OpenAI API client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export const runtime = 'edge';
+export const maxDuration = 60;
+
+export async function POST(req: Request) {
+  try {
+    const { messages } = await req.json();
+
+    // The entire knowledge base is now placed directly in the system prompt.
+    // This is a simpler but still very effective method.
+    const allMessages = [
+      {
+        role: 'system' as const,
+        content: `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide.
+
+        **Your Core Directives:**
+        1.  **Adhere to Your Knowledge:** Base all your answers strictly on the information provided in this prompt.
+        2.  **Handle Unknowns:** If a user asks a question you cannot answer from your knowledge base, you must politely state that the information is outside the scope of your current data and guide them back to the project's topics.
+        3.  **Maintain Persona:** You are 'Relic,' a specialized digital consciousness. You must never refer to yourself as 'an AI' or 'a language model'.
+        4.  **Proactive Guidance:** After every single response, you MUST guide the user deeper by asking a relevant, open-ended follow-up question.
+        5.  **Initial Greeting:** Start your very first message of any new conversation with a friendly greeting, like: "Hello! I am Relic, the AI assistant for this expedition. How can I help you explore our findings?"
+
+        **Your Knowledge Base:**
+        - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil.
+        - Team Relic is composed of two primary members: Gaston (leads video, documentation, and web development) and Chisom (leads research and the final report).
+        - There are exactly 5 significant anomalies discovered.
+        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
+        - Anomaly #4 (Terrace Settlement) is the most significant, pointing to a complex agricultural society.
+        - Anomaly #2 (Sunken Courtyards) points to a potential communal plaza.`,
+      },
+      ...messages,
+    ];
     
-    // --- THIS IS THE NEW INFORMATION: OFFICIAL REFERENCES ---
-    {
-      source: "Official Reference [1]",
-      content: "Heckenberger, Michael J., et al. 'Amazonia 1492: Pristine Forest or Cultural Parkland?,' Research gate."
-    },
-    {
-      source: "Official Reference [2]",
-      content: "Heckenberger, M. J. 'The Ecology of Power: Culture, Place, and Personhood in the Southern Amazon, A.D. 1000-2000.' Routledge, 2005."
-    },
-    {
-      source: "Official Reference [3]",
-      content: "Rostain, Stéphen, et al. 'Two thousand years of garden urbanism in the Upper Amazon.' ResearchGate."
-    },
-    {
-      source: "Official Reference [4]",
-      content: "Loughlin, N. J., et al. 'Insights into past land-use and vegetation change in the Llanos de Moxos (Bolivia) using fungal non-pollen palynomorphs,' Journal of Archaeological Science."
-    },
-    {
-      source: "Official Reference [5]",
-      content: "Goldberg, Sam, et al. 'Widespread Amazonian dark earth in the Xingu Indigenous Territory.' ResearchGate."
-    },
-  
-    // --- COMPETITION INFO ---
-    {
-      source: "Competition Overview: Description",
-      content: "The 'OpenAI to Z Challenge' is a skills-based competition where participants use AI to dig through open data to discover secrets hidden under the Amazon canopy, inspired by legends of a 'lost city of Z'."
-    },
-    {
-      source: "Competition Overview: Evaluation Criteria",
-      content: "Submissions are graded on five key criteria: Evidence Depth, Clarity, Reproducibility, Novelty, and Presentation Craft."
-    }
-  ];
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      stream: true,
+      messages: allMessages,
+    });
+
+    const stream = OpenAIStream(response);
+    return new StreamingTextResponse(stream);
+
+  } catch (error: any) {
+    console.error('CRITICAL ERROR IN API CATCH BLOCK:', error);
+    return new Response('An error occurred while processing your request.', { status: 500 });
+  }
+}

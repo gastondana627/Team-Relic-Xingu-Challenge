@@ -37,36 +37,36 @@ const anomalies = [
     id: 1,
     title: "1.) The Strategic Upland Plateau",
     description: "A massive, winding earthwork suggesting a ceremonial path or symbolic representation.",
-    image: "/assets/Anomaly 1 Basic Image.jpg",
-    video: "/assets/Anomaly 1 Video of Area.mov",
+    image: "/assets/Anomaly_1_Basic_Image.jpg",
+    video: "/assets/Anomaly_1_Video_of_Area.mov",
   },
   {
     id: 2,
     title: "2.) The Network of Secondary Outposts",
     description: "Geometrically aligned rectangular depressions, pointing to a potential communal plaza.",
     image: "/assets/Anomaly_2_Image_of_Area_1.jpg",
-    video: "/assets/Anomaly 2 Video of Area.mov",
+    video: "/assets/Anomaly_2_Video_of_Area.mov",
   },
   {
     id: 3,
     title: "3.) The Elevated Travel Corridor",
     description: "A perfectly circular ditch, indicative of a fortified village, consistent with known settlements.",
     image: "/assets/Anomaly_3_Image_of_Area_1.jpg",
-    video: "/assets/Anomaly 3 Video of Area.mov",
+    video: "/assets/Anomaly_3_Video_of_Area.mov",
   },
   {
     id: 4,
     title: "4.) The Terrace Settlement",
     description: "Our primary discovery: an extensive network of terraces suggesting a complex agricultural society.",
     image: "/assets/Anomaly_4_Image_of_Area_1.jpg",
-    video: "/assets/Anomaly 4 Video of Area.mov",
+    video: "/assets/Anomaly_4_Video_of_Area.mov",
   },
   {
     id: 5,
     title: "5.) The Artificial Shoreline",
     description: "A linear feature identified through Lidar, likely a raised road connecting points of interest.",
     image: "/assets/Anomaly_5_Image_of_Area_1.jpg",
-    video: "/assets/Anomaly 5 Video of Area.mov",
+    video: "/assets/Anomaly_5_Video_of_Area.mov",
   },
 ];
 
@@ -197,8 +197,4 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-
-
 
