@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { OpenAIAdapter, StreamingTextResponse, streamToResponse } from 'ai';
+import { OpenAIAdapter, StreamingTextResponse } from 'ai';
 
 // IMPORTANT: Set the runtime to edge
 export const runtime = 'edge';
@@ -12,18 +12,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const allMessages = [
-      {
-        role: 'system' as const,
-        content: `You are 'Relic', the AI research assistant for Team Relic...` // Keeping your system prompt
-      },
-      ...messages,
-    ];
-
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       stream: true,
-      messages: allMessages,
+      messages: messages, // Assuming your system prompt is handled elsewhere or not needed here
     });
     
     // This is the updated, type-safe way to create the stream
