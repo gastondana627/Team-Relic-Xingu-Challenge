@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import { OpenAIAdapter, StreamingTextResponse } from 'ai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
+import { ChatCompletionCreateParams } from 'openai/resources/chat/completions';
 
 export const runtime = 'edge';
 
@@ -17,11 +18,12 @@ export async function POST(req: Request) {
       messages: messages,
     });
     
-    const stream = OpenAIAdapter.toAIStream(response);
+    // This is the stable way to create the stream
+    const stream = OpenAIStream(response);
     
     return new StreamingTextResponse(stream);
 
-  } catch (error: any) { // The curly braces are correctly placed here
+  } catch (error: any) {
     console.error('💥 CRITICAL CHAT API ERROR:', error);
     return new Response('An internal error occurred.', { status: 500 });
   }
