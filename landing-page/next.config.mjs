@@ -1,15 +1,20 @@
-// landing-page/next.config.mjs
+// next.config.mjs
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    webpack(config) {
-      // This line forces a specific file from the transformers library to be
-      // included in the server-side bundle, which fixes the Vercel build error.
-      config.externals.push({
-        '@xenova/transformers': 'commonjs @xenova/transformers',
-      });
-      return config;
-    },
-  };
-  
-  export default nextConfig;
+  // This setting is from your .ts file
+  output: 'standalone', 
+
+  // This setting is from your .ts file
+  trailingSlash: false,
+
+  // This webpack config is present in both files
+  webpack(config) {
+    config.externals.push({
+      '@xenova/transformers': 'commonjs @xenova/transformers',
+    });
+    return config;
+  },
+};
+
+export default nextConfig;
