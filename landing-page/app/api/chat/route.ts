@@ -2,7 +2,7 @@
 
 // Notice: No imports from 'ai' or '@ai-sdk/react' are needed here.
 
-export const runtime = 'edge';
+//export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
