@@ -172,7 +172,7 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   border-radius: 4px;
   display: flex;
   flex-direction: column;
-  height: 60vh;
+  height: 70vh; /* Increased height for better mobile experience */
 }
 
 .chat-messages {
@@ -188,7 +188,7 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
 .message-bubble {
   padding: 1rem 1.5rem;
   border-radius: 18px;
-  max-width: max-content;
+  max-width: 85%; /* Allow bubbles to be a bit wider on mobile */
   line-height: 1.5;
   font-size: 1.1rem;
   display: flex;
@@ -202,8 +202,6 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   align-self: flex-end;
   border-radius: 18px;
   border-bottom-right-radius: 4px;
-  min-width: 80px;
-  text-align: center;
 }
 
 .ai-bubble {
@@ -212,14 +210,12 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   align-self: flex-start;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
-  min-width: 80px;
-  text-align: left;
 }
 
 .image-bubble {
   padding: 0.5rem;
   background-color: var(--background-dark);
-  max-width: 50%;
+  max-width: 60%;
 }
 
 .chat-image {
@@ -227,25 +223,6 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   max-width: 100%;
   height: auto;
   display: block;
-}
-
-.video-bubble {
-  padding: 0.5rem;
-  background-color: var(--background-dark);
-  align-self: flex-start;
-  max-width: 70%;
-}
-
-.chat-video {
-  border-radius: 14px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.status-bubble {
-  font-style: italic;
-  color: var(--text-secondary);
 }
 
 .chat-form {
@@ -471,6 +448,28 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   .hero h1 { font-size: 3.5rem; }
   .hero .subtitle { font-size: 1.2rem; }
   .hero-content { padding: 1.5rem; backdrop-filter: none; }
+  
+  /* --- START: MOBILE FIXES --- */
+  .hero-video {
+    /* Better framing for vertical video */
+    object-position: 70% 50%; 
+  }
+
+  .chat-form {
+    /* Stack the input and button on mobile */
+    flex-direction: column;
+  }
+
+  .chat-submit-button {
+    padding: 0.75rem; /* Ensure a good tap target size */
+  }
+
+  .chat-actions {
+    /* Stack the action rows */
+    flex-direction: column;
+  }
+  /* --- END: MOBILE FIXES --- */
+
   section { padding: 4rem 1rem; }
   .anomaly-grid { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }
