@@ -1,5 +1,4 @@
 // app/components/Chat.tsx
-// app/components/Chat.tsx
 
 'use client';
 
@@ -21,6 +20,13 @@ const anomalies = [
   "The Artificial Shoreline"
 ];
 
+// Define the conversation starter prompts
+const conversationStarters = [
+  { text: "Tell me about the most significant anomaly." },
+  { text: "Who is on Team Relic?" },
+  { text: "What was the mission of this project?" }
+];
+
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -38,12 +44,18 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    // ... existing handleSubmit logic remains unchanged ...
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
+  const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
+    // Allow submitting directly with a string for starters
+    if (typeof e !== 'string') {
+      e.preventDefault();
+    }
+    
+    const userMessageContent = typeof e === 'string' ? e : input;
+    if (!userMessageContent.trim() || isLoading) return;
+
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userMessageContent };
     const newMessages = [...messages, userMessage];
+
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
@@ -92,7 +104,6 @@ export default function Chat() {
   };
   
   const handleGenerateImage = async () => {
-    // ... existing handleGenerateImage logic remains unchanged ...
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
     setGeneratedImageUrl(null);
@@ -121,6 +132,23 @@ export default function Chat() {
   return (
     <div className="chat-container">
       <div className="chat-messages">
+        {/* --- Conversation Starters UI --- */}
+        {messages.length === 0 && !isLoading && (
+          <div className="starters-container">
+            <h4 className="starters-title">Start a Conversation</h4>
+            {conversationStarters.map((starter, index) => (
+              <button 
+                key={index} 
+                className="starter-button"
+                onClick={() => handleSubmit(starter.text)}
+              >
+                {starter.text}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* --- End Conversation Starters UI --- */}
+
         {messages.map((m) => (
           <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
             <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
@@ -170,17 +198,15 @@ export default function Chat() {
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
-        {/* --- START: "Coming Soon" Video Button --- */}
         <div className="coming-soon-wrapper">
           <button 
             className="image-gen-button"
-            disabled // This button is permanently disabled
+            disabled
           >
             Generate Anomaly Video
           </button>
           <span className="coming-soon-overlay">Coming Soon</span>
         </div>
-        {/* --- END: "Coming Soon" Video Button --- */}
       </div>
     </div>
   );
