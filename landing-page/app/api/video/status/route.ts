@@ -1,7 +1,7 @@
 // app/api/video/status/route.ts
 
 import { NextResponse } from 'next/server';
-import { jobStore } from '../start/route';
+import { kv } from '@vercel/kv'; // Import the Vercel KV client
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,6 +12,24 @@ export async function GET(request: Request) {
   }
 
   try {
+    // **THE FIX**: Check Vercel KV to see if our local simulation is done.
+    const localJob = await kv.get(jobId);
+    if (!localJob) { // If our job has been marked complete by the Runway check
+        const runwayResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${jobId}`, {
+             headers: {
+                "Authorization": `Bearer ${process.env.RUNWAY_API_KEY!}`,
+                "X-Runway-Version": process.env.RUNWAY_API_VERSION!,
+            },
+        });
+        const result = await runwayResponse.json();
+        if (result.status === 'SUCCEEDED') {
+             return NextResponse.json({ 
+                status: 'complete', 
+                videoUrl: result.output.video_url
+            });
+        }
+    }
+
     const runwayResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${jobId}`, {
       method: 'GET',
       headers: {
@@ -27,16 +45,16 @@ export async function GET(request: Request) {
     const result = await runwayResponse.json();
 
     if (result.status === 'SUCCEEDED') {
-      jobStore.delete(jobId);
+      // **THE FIX**: Delete the job from Vercel KV upon completion.
+      await kv.del(jobId);
       return NextResponse.json({ 
         status: 'complete', 
         videoUrl: result.output.video_url
       });
     } else if (result.status === 'FAILED') {
-      jobStore.delete(jobId);
+      await kv.del(jobId);
       return NextResponse.json({ status: 'failed' });
     } else {
-      // **THE FIX**: Using the correct logical OR operator '||'
       return NextResponse.json({ status: result.status || 'processing' });
     }
 

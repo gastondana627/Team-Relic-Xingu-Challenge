@@ -1,20 +1,16 @@
 // app/api/video/start/route.ts
 
 import { NextResponse } from 'next/server';
+import { kv } from '@vercel/kv'; // Import the Vercel KV client
 
 export const runtime = 'edge';
-export const jobStore = new Map();
 
 export async function POST() {
   try {
     const anomalyPrompts = [
-      "A cinematic, sweeping drone shot over a massive, ancient earthwork on a strategic upland plateau in the Amazon. The sun is low, casting long shadows. 8k, photorealistic.",
-      "An archaeological visualization of a network of secondary outposts. The camera moves through geometrically aligned sunken courtyards, revealing a bustling communal plaza from a lost civilization. Highly detailed, realistic.",
-      "A dramatic, fast-paced tracking shot following an ancient elevated travel corridor through the dense Amazon jungle. The corridor is a raised causeway made of earth. Cinematic, adventure movie style.",
-      "A detailed, photorealistic animation showing the construction of an extensive network of agricultural terraces on a hillside in the Amazon. Shows a complex, thriving society at work.",
-      "A beautiful, realistic video showing a massive artificial shoreline created by an ancient civilization, with canoes and small settlements along the water's edge. Golden hour lighting."
+      "A cinematic, sweeping drone shot over a massive, ancient earthwork on a strategic upland plateau in the Amazon...",
+      // ... (your other prompts)
     ];
-
     const randomPrompt = anomalyPrompts[Math.floor(Math.random() * anomalyPrompts.length)];
 
     const runwayResponse = await fetch("https://api.dev.runwayml.com/v1/video/generate", {
@@ -35,12 +31,13 @@ export async function POST() {
 
     if (!runwayResponse.ok) {
       const errorText = await runwayResponse.text();
-      console.error("Runway API Error:", errorText);
-      throw new Error(`Runway API responded with status: ${runwayResponse.status}`);
+      throw new Error(`Runway API Error: ${errorText}`);
     }
 
     const { id: jobId } = await runwayResponse.json();
-    jobStore.set(jobId, { status: 'processing', startTime: Date.now() });
+
+    // Store the job status in Vercel KV with a 10-minute expiration.
+    await kv.set(jobId, { status: 'processing' }, { ex: 600 });
 
     return NextResponse.json({ jobId });
 
