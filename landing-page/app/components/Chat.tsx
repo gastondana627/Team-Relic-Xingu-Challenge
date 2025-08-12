@@ -12,20 +12,13 @@ interface Message {
   content: string;
 }
 
-// **NEW**: Define the list of anomalies for the dropdown
+// Define the list of anomalies for the dropdown
 const anomalies = [
   "The Strategic Upland Plateau",
   "The Network of Secondary Outposts",
   "The Elevated Travel Corridor",
   "The Terrace Settlement",
   "The Artificial Shoreline"
-];
-
-// **NEW**: Define the conversation starter prompts
-const conversationStarters = [
-  { text: "Tell me about the most significant anomaly." },
-  { text: "Who is on Team Relic?" },
-  { text: "What was the mission of this project?" }
 ];
 
 export default function Chat() {
@@ -45,18 +38,12 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
-    // Allow submitting directly with a string for starters
-    if (typeof e !== 'string') {
-      e.preventDefault();
-    }
-    
-    const userMessageContent = typeof e === 'string' ? e : input;
-    if (!userMessageContent.trim() || isLoading) return;
-
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userMessageContent };
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    // ... existing handleSubmit logic remains unchanged ...
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: input };
     const newMessages = [...messages, userMessage];
-
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
@@ -105,6 +92,7 @@ export default function Chat() {
   };
   
   const handleGenerateImage = async () => {
+    // ... existing handleGenerateImage logic remains unchanged ...
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
     setGeneratedImageUrl(null);
@@ -133,23 +121,6 @@ export default function Chat() {
   return (
     <div className="chat-container">
       <div className="chat-messages">
-        {/* --- START: New Conversation Starters UI --- */}
-        {messages.length === 0 && !isLoading && (
-          <div className="starters-container">
-            <h4 className="starters-title">Start a Conversation</h4>
-            {conversationStarters.map((starter, index) => (
-              <button 
-                key={index} 
-                className="starter-button"
-                onClick={() => handleSubmit(starter.text)}
-              >
-                {starter.text}
-              </button>
-            ))}
-          </div>
-        )}
-        {/* --- END: New Conversation Starters UI --- */}
-
         {messages.map((m) => (
           <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
             <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
@@ -180,23 +151,36 @@ export default function Chat() {
           {isLoading ? '...' : 'Send'}
         </button>
       </form>
-      <div className="chat-actions anomaly-generator">
-        <select 
-          className="anomaly-select" 
-          value={selectedAnomaly}
-          onChange={(e) => setSelectedAnomaly(e.target.value)}
-          disabled={isGeneratingImage || isLoading}
-        >
-          <option value="" disabled>Select an anomaly to visualize...</option>
-          {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
-        </select>
-        <button 
-          onClick={handleGenerateImage} 
-          className="image-gen-button"
-          disabled={isGeneratingImage || isLoading || !selectedAnomaly}
-        >
-          {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
-        </button>
+      <div className="chat-actions">
+        <div className="anomaly-generator">
+          <select 
+            className="anomaly-select" 
+            value={selectedAnomaly}
+            onChange={(e) => setSelectedAnomaly(e.target.value)}
+            disabled={isGeneratingImage || isLoading}
+          >
+            <option value="" disabled>Select an anomaly to visualize...</option>
+            {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <button 
+            onClick={handleGenerateImage} 
+            className="image-gen-button"
+            disabled={isGeneratingImage || isLoading || !selectedAnomaly}
+          >
+            {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
+          </button>
+        </div>
+        {/* --- START: "Coming Soon" Video Button --- */}
+        <div className="coming-soon-wrapper">
+          <button 
+            className="image-gen-button"
+            disabled // This button is permanently disabled
+          >
+            Generate Anomaly Video
+          </button>
+          <span className="coming-soon-overlay">Coming Soon</span>
+        </div>
+        {/* --- END: "Coming Soon" Video Button --- */}
       </div>
     </div>
   );

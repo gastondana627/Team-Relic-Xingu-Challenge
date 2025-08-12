@@ -42,7 +42,6 @@ a:hover { color: white; }
 section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items: center; }
 .section-intro { text-align: center; color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 4rem; }
 
-/* --- August 11, 2025 --- */
 .container {
   width: 100%;
   max-width: 1600px; /* Adjust this value as needed for your design */
@@ -153,11 +152,17 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   color: white;
 }
 
-/* AI Insights / Chat Section Styles */
+/* --- AI Insights / Chat Section Styles --- */
+#ai-insights {
+  position: relative;
+  z-index: 2;
+}
+
 .ai-insights-section {
   background-color: var(--background-dark);
   width: 100%;
 }
+
 .chat-container {
   width: 100%;
   max-width: 900px;
@@ -169,6 +174,7 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   flex-direction: column;
   height: 60vh;
 }
+
 .chat-messages {
   flex-grow: 1;
   overflow-y: auto;
@@ -178,49 +184,77 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   padding: 0.5rem;
   margin-bottom: 1rem;
 }
+
 .message-bubble {
   padding: 1rem 1.5rem;
   border-radius: 18px;
   max-width: max-content;
   line-height: 1.5;
   font-size: 1.1rem;
-  display: flex; /* Add this */
-  align-items: baseline; /* And this */
-  gap: 0.5em; /* Optional: adds nice spacing */
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
 }
+
 .user-bubble {
   background-color: var(--accent-gold);
   color: var(--background-dark);
   align-self: flex-end;
   border-radius: 18px;
   border-bottom-right-radius: 4px;
-  min-width: 80px; /* Add this line */
-  text-align: center; /* And this for better alignment */
+  min-width: 80px;
+  text-align: center;
 }
+
 .ai-bubble {
   background-color: rgba(0,0,0,0.2);
   color: var(--text-primary);
   align-self: flex-start;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
-  min-width: 80px; /* Add this line */
-  text-align: left; /* Add this for consistency */
+  min-width: 80px;
+  text-align: left;
 }
+
 .image-bubble {
   padding: 0.5rem;
   background-color: var(--background-dark);
+  max-width: 50%;
 }
+
 .chat-image {
   border-radius: 14px;
   max-width: 100%;
   height: auto;
+  display: block;
 }
+
+.video-bubble {
+  padding: 0.5rem;
+  background-color: var(--background-dark);
+  align-self: flex-start;
+  max-width: 70%;
+}
+
+.chat-video {
+  border-radius: 14px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.status-bubble {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
 .chat-form {
   display: flex;
   gap: 0.5rem;
   border-top: 1px solid var(--border-color);
   padding-top: 1rem;
 }
+
 .chat-input {
   flex-grow: 1;
   background-color: rgba(0,0,0,0.2);
@@ -231,10 +265,12 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.1rem;
 }
+
 .chat-input:focus {
   outline: none;
   border-color: var(--accent-gold);
 }
+
 .chat-submit-button {
   background-color: var(--accent-gold);
   color: var(--background-dark);
@@ -247,97 +283,17 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 .chat-submit-button:hover {
   background-color: white;
 }
-
-/* --- Mobile Responsiveness --- */
-@media (max-width: 768px) {
-  h2 { font-size: 2rem; }
-  .hero h1 { font-size: 3.5rem; }
-  .hero .subtitle { font-size: 1.2rem; }
-  .hero-content { padding: 1.5rem; backdrop-filter: none; }
-  section { padding: 4rem 1rem; }
-  .anomaly-grid { grid-template-columns: 1fr; }
-  .team-grid { grid-template-columns: 1fr; } /* Changed for better mobile bio layout */
-  .document-gallery-grid { grid-template-columns: 1fr; }
-}
-
-/* === NEW STYLES for Document Card Gallery === */
-.document-gallery-section {
-  background-color: var(--background-dark);
-  width: 100%;
-}
-
-.document-gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 1400px;
-}
-
-.document-card-link {
-  background-color: var(--panel-dark);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  height: 200px; /* Set a fixed height for all cards */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.document-card-link:hover {
-  transform: translateY(-5px) scale(1.03);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-  border-color: var(--accent-gold);
-}
-
-.document-card-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-}
-
-.document-icon {
-  stroke: var(--accent-gold);
-  flex-shrink: 0; /* Prevents the icon from shrinking */
-}
-
-.document-title {
-  color: var(--text-primary);
-  font-family: 'Manrope', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin: 0;
-}
-
-
-
-/* === FINAL CHATBOT FIX === */
-#ai-insights {
-  position: relative;
-  z-index: 2;
-}
-
-
-
-
-
-/* August 11, 2025 Add these styles to the bottom of your app/globals.css file */
 
 .chat-actions {
   display: flex;
   justify-content: center;
   padding-top: 0.75rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .image-gen-button {
@@ -363,102 +319,160 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   cursor: not-allowed;
 }
 
-.image-bubble {
-  padding: 0.5rem;
-  background-color: var(--background-dark);
-  align-self: flex-start;
-  max-width: 50%; /* Adjust as needed */
+.anomaly-generator {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
 }
 
-.chat-image {
-  border-radius: 14px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Add these styles to the bottom of your app/globals.css file */
-
-.status-bubble {
-  font-style: italic;
+.anomaly-select {
+  flex-grow: 1;
+  background-color: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 50px;
+  padding: 0.75rem 1.25rem;
   color: var(--text-secondary);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  cursor: pointer;
 }
 
-.video-bubble {
-  padding: 0.5rem;
+.anomaly-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+}
+
+.starters-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  height: 100%;
+}
+
+.starters-title {
+  color: var(--text-secondary);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+}
+
+.starter-button {
+  width: 100%;
+  max-width: 400px;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  background-color: rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  font-family: 'Cormorant Garamond', serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.starter-button:hover {
+  border-color: var(--accent-gold);
+  background-color: rgba(199, 164, 74, 0.1);
+}
+
+.coming-soon-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.coming-soon-wrapper .image-gen-button {
+  flex-grow: 1;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.coming-soon-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  background-color: rgba(255, 0, 0, 0.5);
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 4px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* --- Document Card Gallery --- */
+.document-gallery-section {
   background-color: var(--background-dark);
-  align-self: flex-start;
-  max-width: 70%; /* Videos can be wider */
+  width: 100%;
 }
 
-.chat-video {
-  border-radius: 14px;
-  max-width: 100%;
-  height: auto;
-  display: block;
+.document-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1400px;
 }
 
-/* Add these styles to your app/globals.css file,
-   perhaps near the other chat-actions styles. */
+.document-card-link {
+  background-color: var(--panel-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  text-align: center;
+}
 
-   .anomaly-generator {
-    display: flex;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  .anomaly-select {
-    flex-grow: 1;
-    background-color: rgba(0,0,0,0.2);
-    border: 1px solid var(--border-color);
-    border-radius: 50px;
-    padding: 0.75rem 1.25rem;
-    color: var(--text-secondary);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  
-  .anomaly-select:focus {
-    outline: none;
-    border-color: var(--accent-gold);
-    color: var(--text-primary);
-  }
-  
+.document-card-link:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  border-color: var(--accent-gold);
+}
 
-  .starters-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 2rem;
-    height: 100%;
-  }
-  
-  .starters-title {
-    color: var(--text-secondary);
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-  }
-  
-  .starter-button {
-    width: 100%;
-    max-width: 400px;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-primary);
-    background-color: rgba(0,0,0,0.2);
-    transition: all 0.2s ease;
-    font-size: 1rem;
-    font-family: 'Cormorant Garamond', serif;
-    cursor: pointer;
-    text-align: left;
-  }
-  
-  .starter-button:hover {
-    border-color: var(--accent-gold);
-    background-color: rgba(199, 164, 74, 0.1);
-  }
-  
+.document-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.document-icon {
+  stroke: var(--accent-gold);
+  flex-shrink: 0;
+}
+
+.document-title {
+  color: var(--text-primary);
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  h2 { font-size: 2rem; }
+  .hero h1 { font-size: 3.5rem; }
+  .hero .subtitle { font-size: 1.2rem; }
+  .hero-content { padding: 1.5rem; backdrop-filter: none; }
+  section { padding: 4rem 1rem; }
+  .anomaly-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; }
+  .document-gallery-grid { grid-template-columns: 1fr; }
+}
