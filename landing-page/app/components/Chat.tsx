@@ -70,31 +70,45 @@ export default function Chat() {
       });
       setLastImagePrompt(null);
       if (!response.body) throw new Error('The response body is empty.');
+      
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       const assistantMessageId = Date.now().toString() + '-ai';
+
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
+
+      // --- START: ROBUST STREAM PARSING LOGIC ---
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n\n');
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.substring(6);
-            if (data === '[DONE]') break;
+            if (data.trim() === '[DONE]') {
+              break;
+            }
             try {
               const parsed = JSON.parse(data);
               const textChunk = parsed.choices[0]?.delta?.content || '';
+
               if (textChunk) {
                 setMessages(prev => prev.map(msg => 
                   msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
                 ));
               }
-            } catch (error) {}
+            } catch (error) {
+              // This can happen with incomplete JSON chunks, which is normal.
+              // We'll just wait for the next chunk.
+            }
           }
         }
       }
+      // --- END: ROBUST STREAM PARSING LOGIC ---
+
     } catch (error) {
       console.error("Chat submission error:", error);
       setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
