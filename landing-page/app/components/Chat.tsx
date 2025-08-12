@@ -78,12 +78,14 @@ export default function Chat() {
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
       // --- START: ROBUST STREAM PARSING LOGIC ---
+      let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep the last, possibly incomplete line in the buffer
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
@@ -102,7 +104,7 @@ export default function Chat() {
               }
             } catch (error) {
               // This can happen with incomplete JSON chunks, which is normal.
-              // We'll just wait for the next chunk.
+              // We'll just wait for the next chunk to complete it.
             }
           }
         }
