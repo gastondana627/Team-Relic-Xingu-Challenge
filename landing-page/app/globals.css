@@ -42,6 +42,16 @@ a:hover { color: white; }
 section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items: center; }
 .section-intro { text-align: center; color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 4rem; }
 
+/* --- August 11, 2025 --- */
+.container {
+  width: 100%;
+  max-width: 1600px; /* Adjust this value as needed for your design */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
 /* --- THEME-ENHANCED SECTIONS --- */
 
 /* Hero Section */
@@ -317,3 +327,138 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   position: relative;
   z-index: 2;
 }
+
+
+
+
+
+/* August 11, 2025 Add these styles to the bottom of your app/globals.css file */
+
+.chat-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.75rem;
+}
+
+.image-gen-button {
+  padding: 0.5rem 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 50px;
+  color: var(--text-secondary);
+  background-color: rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+}
+
+.image-gen-button:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.image-gen-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-bubble {
+  padding: 0.5rem;
+  background-color: var(--background-dark);
+  align-self: flex-start;
+  max-width: 50%; /* Adjust as needed */
+}
+
+.chat-image {
+  border-radius: 14px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Add these styles to the bottom of your app/globals.css file */
+
+.status-bubble {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.video-bubble {
+  padding: 0.5rem;
+  background-color: var(--background-dark);
+  align-self: flex-start;
+  max-width: 70%; /* Videos can be wider */
+}
+
+.chat-video {
+  border-radius: 14px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Add these styles to your app/globals.css file,
+   perhaps near the other chat-actions styles. */
+
+   .anomaly-generator {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .anomaly-select {
+    flex-grow: 1;
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    padding: 0.75rem 1.25rem;
+    color: var(--text-secondary);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  
+  .anomaly-select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    color: var(--text-primary);
+  }
+  
+
+  .starters-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    height: 100%;
+  }
+  
+  .starters-title {
+    color: var(--text-secondary);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+  }
+  
+  .starter-button {
+    width: 100%;
+    max-width: 400px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    background-color: rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    font-family: 'Cormorant Garamond', serif;
+    cursor: pointer;
+    text-align: left;
+  }
+  
+  .starter-button:hover {
+    border-color: var(--accent-gold);
+    background-color: rgba(199, 164, 74, 0.1);
+  }
+  

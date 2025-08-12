@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^0.0.36",
     "@ai-sdk/react": "^0.0.17",
+    "@runwayml/sdk": "^2.8.0",
     "ai": "^3.2.32",
     "next": "15.3.4",
     "openai": "^4.53.0",
@@ -28,4 +29,3 @@
     "typescript": "^5"
   }
 }
-
