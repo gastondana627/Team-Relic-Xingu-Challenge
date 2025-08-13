@@ -475,3 +475,52 @@ section { padding: 5rem 2rem; display: flex; flex-direction: column; align-items
   .team-grid { grid-template-columns: 1fr; }
   .document-gallery-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Add these new styles to your app/globals.css file.
+   A good place is after the .document-title style. */
+
+   .knowledge-graph-container {
+    /* This existing class from page.tsx can be used for alignment */
+    width: 100%;
+    max-width: 900px; /* Match the chatbot's width */
+    margin-bottom: 2rem;
+  }
+  
+  .kg-wrapper {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative; /* Needed for positioning the link */
+    background-color: var(--panel-dark);
+    height: 500px; /* Set a fixed height */
+  }
+  
+  .kg-loading-text {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 2rem;
+    height: 500px; /* Match the graph height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .neo4j-link {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: rgba(0,0,0,0.4);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: 'Manrope', sans-serif;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .neo4j-link:hover {
+    background-color: #008ccB; /* Neo4j's brand blue */
+    color: white;
+  }

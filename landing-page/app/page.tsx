@@ -1,11 +1,17 @@
+// app/page.tsx
+'use client'; // This page now needs to be a client component to manage state
+
+import { useState, useEffect } from 'react';
+import { useChat } from 'ai/react';
 import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
 import TeamMemberCard from './components/TeamMemberCard';
 import Chat from './components/Chat';
 import DocumentGallery from './components/DocumentGallery';
+import KnowledgeGraphShowcase from './components/KnowledgeGraphShowcase';
 
-const teamMembers = [
+const teamMembers = [ 
     {
         name: "Gaston",
         role: "Video, Documentation & Landing Page",
@@ -23,16 +29,13 @@ const teamMembers = [
         imageUrl: "/assets/Chisom.jpg",
         headline: "Lead Researcher & Technical Writer",
         bio: "Focused on ensuring the accuracy, clarity, and impact of our findings. Translates raw data into a professional, evidence-based report ready for academic and expert review.",
-        // This 'socials' object is now updated
         socials: {
             linkedin: "https://www.linkedin.com/in/chisom-aniekwensi/",
             github: "https://github.com/somanie",
         }
     },
 ];
-
-// --- The rest of the file remains unchanged ---
-const anomalies = [
+const anomalies = [ 
   {
     id: 1,
     title: "1.) The Strategic Upland Plateau",
@@ -71,6 +74,25 @@ const anomalies = [
 ];
 
 export default function HomePage() {
+  // --- START: State Lifted Up ---
+  const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
+  
+  const { messages, input, handleInputChange, handleSubmit, data } = useChat({
+    api: '/api/chat',
+    onFinish: () => {
+      // Clear highlights a moment after the message is complete
+      setTimeout(() => setHighlightedNodes([]), 2000);
+    }
+  });
+
+  // Effect to process incoming data for highlights
+  useEffect(() => {
+    if (data && (data as any).highlightedNodes) {
+      setHighlightedNodes((data as any).highlightedNodes);
+    }
+  }, [data]);
+  // --- END: State Lifted Up ---
+
   return (
     <div className="container">
       <header className="hero">
@@ -116,7 +138,21 @@ export default function HomePage() {
           <p className="section-intro">
             Ask a question about our project, methodology, or findings. Our AI assistant, powered by OpenAI and trained on our research, will answer in real-time.
           </p>
-          <Chat />
+
+          <div className="knowledge-graph-container" style={{marginBottom: '2rem', textAlign: 'center'}}>
+            <h4 style={{color: 'var(--accent-gold)'}}>A Glimpse into Relic's Brain</h4>
+            <p style={{maxWidth: '65ch', margin: '0 auto 1rem auto'}}>This is a live visualization of the knowledge graph that powers our AI. Click a node to zoom in.</p>
+            {/* Pass the highlighted nodes state to the showcase */}
+            <KnowledgeGraphShowcase highlightedNodes={highlightedNodes} />
+          </div>
+
+          {/* Pass all necessary state and functions to the chat component */}
+          <Chat 
+            messages={messages}
+            input={input}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+          />
         </section>
         
         <section id="timeline" className="timeline-section">
@@ -197,4 +233,3 @@ export default function HomePage() {
     </div>
   );
 }
-

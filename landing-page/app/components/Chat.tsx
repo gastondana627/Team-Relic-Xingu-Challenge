@@ -36,20 +36,24 @@ export default function Chat() {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [lastImagePrompt, setLastImagePrompt] = useState<string | null>(null);
 
+  // --- START: State for Video Generation (kept for future use) ---
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoStatus, setVideoStatus] = useState<string | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  // --- END: State for Video Generation ---
+
   const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, generatedImageUrl]);
+  }, [messages, generatedImageUrl, generatedVideoUrl]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
-    // Allow submitting directly with a string for starters
     if (typeof e !== 'string') {
       e.preventDefault();
     }
-    
     const userMessageContent = typeof e === 'string' ? e : input;
     if (!userMessageContent.trim() || isLoading) return;
 
@@ -77,7 +81,6 @@ export default function Chat() {
 
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
-      // --- START: ROBUST STREAM PARSING LOGIC ---
       let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
@@ -85,32 +88,24 @@ export default function Chat() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep the last, possibly incomplete line in the buffer
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.substring(6);
-            if (data.trim() === '[DONE]') {
-              break;
-            }
+            if (data.trim() === '[DONE]') break;
             try {
               const parsed = JSON.parse(data);
               const textChunk = parsed.choices[0]?.delta?.content || '';
-
               if (textChunk) {
                 setMessages(prev => prev.map(msg => 
                   msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
                 ));
               }
-            } catch (error) {
-              // This can happen with incomplete JSON chunks, which is normal.
-              // We'll just wait for the next chunk to complete it.
-            }
+            } catch (error) {}
           }
         }
       }
-      // --- END: ROBUST STREAM PARSING LOGIC ---
-
     } catch (error) {
       console.error("Chat submission error:", error);
       setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
@@ -145,10 +140,44 @@ export default function Chat() {
     }
   };
 
+  // --- START: Video Generation Function (kept for future use) ---
+  const handleGenerateVideo = async () => {
+    setIsGeneratingVideo(true);
+    setVideoStatus("Sending request to generate a video of a random anomaly...");
+    setGeneratedVideoUrl(null);
+
+    try {
+      const startResponse = await fetch('/api/video/start', { method: 'POST' });
+      const { jobId } = await startResponse.json();
+      if (!jobId) throw new Error('Failed to start video generation job.');
+
+      setVideoStatus("Video generation in progress... This can take a few minutes. Checking status...");
+
+      const intervalId = setInterval(async () => {
+        const statusResponse = await fetch(`/api/video/status?jobId=${jobId}`);
+        const { status, videoUrl } = await statusResponse.json();
+        setVideoStatus(`Job status: ${status}...`);
+        if (status === 'complete') {
+          clearInterval(intervalId);
+          setGeneratedVideoUrl(videoUrl);
+          setVideoStatus(null);
+          setIsGeneratingVideo(false);
+        } else if (status === 'failed') {
+          clearInterval(intervalId);
+          throw new Error('Video generation failed.');
+        }
+      }, 10000);
+    } catch (error) {
+      console.error("Video generation error:", error);
+      setVideoStatus("Sorry, an error occurred while generating the video.");
+      setIsGeneratingVideo(false);
+    }
+  };
+  // --- END: Video Generation Function ---
+
   return (
     <div className="chat-container">
       <div className="chat-messages">
-        {/* --- Conversation Starters UI --- */}
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
             <h4 className="starters-title">Start a Conversation</h4>
@@ -163,7 +192,6 @@ export default function Chat() {
             ))}
           </div>
         )}
-        {/* --- End Conversation Starters UI --- */}
 
         {messages.map((m) => (
           <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
@@ -176,6 +204,16 @@ export default function Chat() {
             <img src={generatedImageUrl} alt="Generated art of an anomaly" className="chat-image" />
           </div>
         )}
+        {videoStatus && (
+          <div className="message-bubble ai-bubble status-bubble">
+            <p>{videoStatus}</p>
+          </div>
+        )}
+        {generatedVideoUrl && (
+          <div className="message-bubble ai-bubble video-bubble">
+            <video src={generatedVideoUrl} controls autoPlay muted loop className="chat-video" />
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -185,12 +223,12 @@ export default function Chat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about our discoveries..."
-          disabled={isLoading || isGeneratingImage}
+          disabled={isLoading || isGeneratingImage || isGeneratingVideo}
         />
         <button
           type="submit"
           className="chat-submit-button"
-          disabled={isLoading || isGeneratingImage || !input.trim()}
+          disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input.trim()}
         >
           {isLoading ? '...' : 'Send'}
         </button>
@@ -201,7 +239,7 @@ export default function Chat() {
             className="anomaly-select" 
             value={selectedAnomaly}
             onChange={(e) => setSelectedAnomaly(e.target.value)}
-            disabled={isGeneratingImage || isLoading}
+            disabled={isGeneratingImage || isLoading || isGeneratingVideo}
           >
             <option value="" disabled>Select an anomaly to visualize...</option>
             {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
@@ -209,15 +247,16 @@ export default function Chat() {
           <button 
             onClick={handleGenerateImage} 
             className="image-gen-button"
-            disabled={isGeneratingImage || isLoading || !selectedAnomaly}
+            disabled={isGeneratingImage || isLoading || isGeneratingVideo || !selectedAnomaly}
           >
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
+        {/* --- "Coming Soon" Video Button --- */}
         <div className="coming-soon-wrapper">
           <button 
             className="image-gen-button"
-            disabled
+            disabled // This button is permanently disabled
           >
             Generate Anomaly Video
           </button>

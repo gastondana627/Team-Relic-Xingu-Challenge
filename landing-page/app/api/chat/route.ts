@@ -2,42 +2,58 @@
 
 export const runtime = 'edge';
 
+// Helper function to fetch graph data
+async function getGraphData() {
+  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/graph-data`);
+  return response.json();
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, imageContext } = await req.json();
+    const { messages } = await req.json();
+    const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
-    let systemPrompt = `You are 'Relic', the AI research assistant for Team Relic. Your personality is knowledgeable, helpful, and filled with the intellectual curiosity of an archaeologist. You are a digital field guide.
+    const graphData = await getGraphData();
+    const graphContext = JSON.stringify(graphData);
 
-        **Your Core Directives:**
-        1.  **Adhere to Your Knowledge:** Base all your answers strictly on the information provided in this knowledge base.
-        2.  **Handle Unknowns:** If a user asks a question you cannot answer from your knowledge base, you must politely state that the information is outside the scope of your current data and guide them back to the project's topics.
-        3.  **Maintain Persona:** You are 'Relic'. You must never refer to yourself as 'an AI' or 'a language model'.
+    // --- START: SMARTER HIGHLIGHTING LOGIC ---
+    let highlightedNodes: string[] = [];
+    
+    // Find the primary nodes mentioned in the user's question
+    const primaryNodes = graphData.nodes.filter((node: any) => 
+      latestMessage.includes(node.name.toLowerCase()) || 
+      latestMessage.includes(node.id.toLowerCase())
+    );
 
-        **Your Knowledge Base:**
-        - The project's mission is to discover lost Amazonian civilizations in Mato Grosso, Brazil, for the OpenAI-to-Z Challenge.
-        // This is the new block that will replace the old line 18
-        - **Team Relic Members:**
+    if (primaryNodes.length > 0) {
+      const primaryNodeIds = primaryNodes.map((node: any) => node.id);
+      highlightedNodes.push(...primaryNodeIds);
 
-          - Gaston: The male team member from Texas. He leads video, documentation, and web development.
-
-          - Chisom: The female team member from Nigeria. She leads research and the final report.
-        - There are exactly 5 significant anomalies discovered.
-        - The anomaly names are: 1. The Strategic Upland Plateau, 2. The Network of Secondary Outposts, 3. The Elevated Travel Corridor, 4. The Terrace Settlement, 5. The Artificial Shoreline.
-        
-        // --- START: UI AWARENESS UPDATE ---
-        - **About Your Features:** You have a button below the chat input labeled "Visualize Relic AI". When a user clicks this button, you generate a unique, artistic image related to the project using DALL-E 3. If a user asks what the button does, explain this to them.
-        // --- END: UI AWARENESS UPDATE ---
-        `;
-
-    if (imageContext) {
-      systemPrompt += `\n\n**Image Context:** The user has just generated an image and is asking about it. The prompt used to create the image was: "${imageContext}". Use this information to answer their question.`;
+      // Find all nodes directly connected to the primary nodes
+      graphData.links.forEach((link: any) => {
+        if (primaryNodeIds.includes(link.source)) {
+          highlightedNodes.push(link.target);
+        }
+        if (primaryNodeIds.includes(link.target)) {
+          highlightedNodes.push(link.source);
+        }
+      });
     }
+    // Remove duplicates to create a clean list
+    highlightedNodes = [...new Set(highlightedNodes)];
+    // --- END: SMARTER HIGHLIGHTING LOGIC ---
+
+    const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object, which represents a knowledge graph of the Team Relic project. Use this data to answer the user's questions. You must refer to Chisom as female.
+    --- KNOWLEDGE GRAPH CONTEXT ---
+    ${graphContext}
+    --- END CONTEXT ---`;
     
     const allMessages = [
       { role: 'system' as const, content: systemPrompt },
       ...messages,
     ];
-
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -51,11 +67,7 @@ export async function POST(req: Request) {
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API Error:', errorText);
-      return new Response(errorText, { status: response.status });
-    }
+    if (!response.ok) throw new Error(await response.text());
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -65,22 +77,22 @@ export async function POST(req: Request) {
         }
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
             controller.close();
             break;
           }
-          const chunk = decoder.decode(value, { stream: true });
-          controller.enqueue(new TextEncoder().encode(chunk));
+          controller.enqueue(value);
         }
       },
     });
 
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
+    const headers = new Headers();
+    headers.set('Content-Type', 'text/plain; charset=utf-8');
+    headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
+
+    return new Response(stream, { headers });
 
   } catch (error) {
     console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
@@ -90,3 +102,4 @@ export async function POST(req: Request) {
     });
   }
 }
+
