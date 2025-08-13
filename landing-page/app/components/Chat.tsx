@@ -1,49 +1,119 @@
+// app/components/Chat.tsx
+
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Message, ChatRequestOptions } from 'ai/react'; // Use types from the library
 
-// This component now defines the props it expects to receive from its parent.
-type ChatProps = {
-  messages: Message[];
-  input: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>, chatRequestOptions?: ChatRequestOptions | undefined) => void;
-};
+// Define the shape of a message object
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-export default function Chat({ messages, input, handleInputChange, handleSubmit }: ChatProps) {
-  // --- START: Internal State for Image/Video Features ---
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
-  const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
+// Define the list of anomalies for the dropdown
+const anomalies = [
+  "The Strategic Upland Plateau",
+  "The Network of Secondary Outposts",
+  "The Elevated Travel Corridor",
+  "The Terrace Settlement",
+  "The Artificial Shoreline"
+];
+
+// Define the conversation starter prompts
+const conversationStarters = [
+  { text: "Tell me about the most significant anomaly." },
+  { text: "Who is on Team Relic?" },
+  { text: "What was the mission of this project?" }
+];
+
+export default function Chat() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Video generation state is kept for future implementation
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [lastImagePrompt, setLastImagePrompt] = useState<string | null>(null);
+
+  // --- START: State for Video Generation (kept for future use) ---
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
-  // --- END: Internal State ---
+  // --- END: State for Video Generation ---
+
+  const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const anomalies = [
-    "The Strategic Upland Plateau",
-    "The Network of Secondary Outposts",
-    "The Elevated Travel Corridor",
-    "The Terrace Settlement",
-    "The Artificial Shoreline"
-  ];
-
-  const conversationStarters = [
-    { text: "Tell me about the most significant anomaly." },
-    { text: "Who is on Team Relic?" },
-    { text: "What was the mission of this project?" }
-  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl, generatedVideoUrl]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
+    if (typeof e !== 'string') {
+      e.preventDefault();
+    }
+    const userMessageContent = typeof e === 'string' ? e : input;
+    if (!userMessageContent.trim() || isLoading) return;
+
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userMessageContent };
+    const newMessages = [...messages, userMessage];
+
+    setMessages(newMessages);
+    setInput('');
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: newMessages,
+          imageContext: lastImagePrompt
+        }),
+      });
+      setLastImagePrompt(null);
+      if (!response.body) throw new Error('The response body is empty.');
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      const assistantMessageId = Date.now().toString() + '-ai';
+
+      setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
+
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            if (data.trim() === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(data);
+              const textChunk = parsed.choices[0]?.delta?.content || '';
+              if (textChunk) {
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
+                ));
+              }
+            } catch (error) {}
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Chat submission error:", error);
+      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
-  // This function remains self-contained within the Chat component
   const handleGenerateImage = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
@@ -55,19 +125,22 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit 
         body: JSON.stringify({ anomaly: selectedAnomaly }),
       });
       const result = await response.json();
-      if (result.imageUrl) {
+      if (result.imageUrl && result.prompt) {
         setGeneratedImageUrl(result.imageUrl);
+        setLastImagePrompt(result.prompt);
       } else {
         throw new Error(result.error || 'Failed to generate image.');
       }
     } catch (error) {
       console.error("Image generation error:", error);
+      const errorMessage: Message = { id: 'image-error', role: 'assistant', content: 'Sorry, I was unable to generate the image.' };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
-  // This function is also kept for future use
+  // --- START: Video Generation Function (kept for future use) ---
   const handleGenerateVideo = async () => {
     setIsGeneratingVideo(true);
     setVideoStatus("Sending request to generate a video of a random anomaly...");
@@ -100,33 +173,26 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit 
       setIsGeneratingVideo(false);
     }
   };
+  // --- END: Video Generation Function ---
 
   return (
     <div className="chat-container">
       <div className="chat-messages">
-        {messages.length === 0 && (
+        {messages.length === 0 && !isLoading && (
           <div className="starters-container">
+            <h4 className="starters-title">Start a Conversation</h4>
             {conversationStarters.map((starter, index) => (
               <button 
                 key={index} 
                 className="starter-button"
-                // This needs to be adapted to work with the passed-in handleSubmit
-                onClick={() => {
-                  // This is a workaround to pass the starter text.
-                  // A more advanced solution would use the `append` function from `useChat`.
-                  const artificialEvent = { preventDefault: () => {} } as any;
-                  const tempInput = document.createElement('input');
-                  tempInput.value = starter.text;
-                  handleInputChange({ target: tempInput } as any);
-                  // A brief timeout to allow state to update before submitting
-                  setTimeout(() => handleSubmit(artificialEvent), 0);
-                }}
+                onClick={() => handleSubmit(starter.text)}
               >
                 {starter.text}
               </button>
             ))}
           </div>
         )}
+
         {messages.map((m) => (
           <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
             <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
@@ -155,16 +221,16 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit 
         <input
           className="chat-input"
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about our discoveries..."
-          disabled={isGeneratingImage || isGeneratingVideo}
+          disabled={isLoading || isGeneratingImage || isGeneratingVideo}
         />
         <button
           type="submit"
           className="chat-submit-button"
-          disabled={isGeneratingImage || isGeneratingVideo || !input.trim()}
+          disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input.trim()}
         >
-          Send
+          {isLoading ? '...' : 'Send'}
         </button>
       </form>
       <div className="chat-actions">
@@ -173,7 +239,7 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit 
             className="anomaly-select" 
             value={selectedAnomaly}
             onChange={(e) => setSelectedAnomaly(e.target.value)}
-            disabled={isGeneratingImage || isGeneratingVideo}
+            disabled={isGeneratingImage || isLoading || isGeneratingVideo}
           >
             <option value="" disabled>Select an anomaly to visualize...</option>
             {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
@@ -181,13 +247,19 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit 
           <button 
             onClick={handleGenerateImage} 
             className="image-gen-button"
-            disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
+            disabled={isGeneratingImage || isLoading || isGeneratingVideo || !selectedAnomaly}
           >
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
+        {/* --- "Coming Soon" Video Button --- */}
         <div className="coming-soon-wrapper">
-          <button className="image-gen-button" disabled>Generate Anomaly Video</button>
+          <button 
+            className="image-gen-button"
+            disabled // This button is permanently disabled
+          >
+            Generate Anomaly Video
+          </button>
           <span className="coming-soon-overlay">Coming Soon</span>
         </div>
       </div>
