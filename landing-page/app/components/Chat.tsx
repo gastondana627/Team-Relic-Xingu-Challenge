@@ -1,15 +1,15 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Message, ChatRequestOptions } from 'ai/react'; // Use types from the library
+import { Message } from 'ai/react'; // Use the type from the library
 
-// This component now defines the props it expects to receive from its parent.
+// **THE FIX**: This component now correctly defines the props it receives from the parent page.
+// We also add the 'append' function, which is needed for the conversation starters.
 type ChatProps = {
   messages: Message[];
   input: string;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>, chatRequestOptions?: ChatRequestOptions | undefined) => void;
-  // We also need the 'append' function for the conversation starters
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   append: (message: Message | Omit<Message, 'id'>) => Promise<string | null | undefined>;
 };
 
@@ -113,7 +113,7 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit,
               <button 
                 key={index} 
                 className="starter-button"
-                // **THE FIX**: Use the 'append' function for conversation starters
+                // **THE FIX**: Use the 'append' function passed down from the parent for starters
                 onClick={() => append({ role: 'user', content: starter.text })}
               >
                 {starter.text}
