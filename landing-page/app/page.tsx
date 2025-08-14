@@ -77,11 +77,11 @@ export default function HomePage() {
   // --- START: State Lifted Up ---
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
   
-  const { messages, input, handleInputChange, handleSubmit, data } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, data, append } = useChat({
     api: '/api/chat',
     onFinish: () => {
       // Clear highlights a moment after the message is complete
-      setTimeout(() => setHighlightedNodes([]), 2000);
+      setTimeout(() => setHighlightedNodes([]), 4000);
     }
   });
 
@@ -152,6 +152,7 @@ export default function HomePage() {
             input={input}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
+            append={append}
           />
         </section>
         
