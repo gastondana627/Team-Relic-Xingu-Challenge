@@ -113,7 +113,7 @@ export default function Chat({ messages, input, handleInputChange, handleSubmit,
               <button 
                 key={index} 
                 className="starter-button"
-                // Use the 'append' function for conversation starters
+                // **THE FIX**: Use the 'append' function for conversation starters
                 onClick={() => append({ role: 'user', content: starter.text })}
               >
                 {starter.text}
