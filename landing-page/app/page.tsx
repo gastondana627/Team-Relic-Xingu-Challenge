@@ -1,8 +1,7 @@
 // app/page.tsx
-'use client'; // This page now needs to be a client component to manage state
+'use client'; // This page still needs to be a client component to manage state
 
-import { useState, useEffect } from 'react';
-import { useChat } from 'ai/react';
+import { useState } from 'react';
 import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
@@ -74,24 +73,8 @@ const anomalies = [
 ];
 
 export default function HomePage() {
-  // --- START: State Lifted Up ---
+  // **THE FIX**: The page now only manages the highlighted nodes state.
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
-  
-  const { messages, input, handleInputChange, handleSubmit, data, append } = useChat({
-    api: '/api/chat',
-    onFinish: () => {
-      // Clear highlights a moment after the message is complete
-      setTimeout(() => setHighlightedNodes([]), 4000);
-    }
-  });
-
-  // Effect to process incoming data for highlights
-  useEffect(() => {
-    if (data && (data as any).highlightedNodes) {
-      setHighlightedNodes((data as any).highlightedNodes);
-    }
-  }, [data]);
-  // --- END: State Lifted Up ---
 
   return (
     <div className="container">
@@ -138,22 +121,13 @@ export default function HomePage() {
           <p className="section-intro">
             Ask a question about our project, methodology, or findings. Our AI assistant, powered by OpenAI and trained on our research, will answer in real-time.
           </p>
-
           <div className="knowledge-graph-container" style={{marginBottom: '2rem', textAlign: 'center'}}>
             <h4 style={{color: 'var(--accent-gold)'}}>A Glimpse into Relic's Brain</h4>
             <p style={{maxWidth: '65ch', margin: '0 auto 1rem auto'}}>This is a live visualization of the knowledge graph that powers our AI. Click a node to zoom in.</p>
-            {/* Pass the highlighted nodes state to the showcase */}
             <KnowledgeGraphShowcase highlightedNodes={highlightedNodes} />
           </div>
-
-          {/* Pass all necessary state and functions to the chat component */}
-          <Chat 
-            messages={messages}
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            append={append}
-          />
+          {/* **THE FIX**: We pass a function to Chat so it can update the highlights */}
+          <Chat onNewHighlight={setHighlightedNodes} />
         </section>
         
         <section id="timeline" className="timeline-section">
