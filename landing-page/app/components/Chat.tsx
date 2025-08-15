@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-// Got It
+
 // Define the shape of a message object
 interface Message {
   id: string;
