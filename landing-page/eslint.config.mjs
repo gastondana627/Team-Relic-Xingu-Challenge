@@ -4,7 +4,7 @@ import nextPlugin from "@next/eslint-plugin-next";
 /** @type {import('eslint').Linter.FlatConfig[]} */
 const config = [
   {
-    // This key is required to specify which files the rules apply to.
+    // **THE FIX**: This key is required to specify which files the rules apply to.
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     plugins: {
       "@next/next": nextPlugin,
@@ -13,7 +13,7 @@ const config = [
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
     },
-    // This key prevents "React is not defined" errors.
+    // This key prevents "React is not defined" errors in some environments.
     languageOptions: {
         globals: {
             React: 'readonly',
