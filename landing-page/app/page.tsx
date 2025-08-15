@@ -1,4 +1,5 @@
 // app/page.tsx
+// Final check to confirm git tracking
 'use client'; // This page still needs to be a client component to manage state
 
 import { useState } from 'react';
