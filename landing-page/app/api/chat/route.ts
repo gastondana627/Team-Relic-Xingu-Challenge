@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY!}`,
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY ?? ''}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -63,19 +63,15 @@ export async function POST(req: Request) {
       }),
     });
 
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`OpenAI API error: ${err}`);
+    if (!response.ok || !response.body) {
+      const errText = await response.text();
+      throw new Error(`OpenAI API failed (${response.status}): ${errText}`);
     }
 
-    // ✅ Convert raw body into stream
+    // ✅ Convert raw body into stream passthrough
     const stream = new ReadableStream({
       async start(controller) {
-        if (!response.body) {
-          controller.close();
-          return;
-        }
-        const reader = response.body.getReader();
+        const reader = response.body!.getReader();
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -87,9 +83,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // ✅ Production-safe headers
+    // ✅ Headers safe for production
     const headers = new Headers();
-    headers.set('Content-Type', 'text/plain; charset=utf-8'); // safer for your frontend
+    headers.set('Content-Type', 'text/plain; charset=utf-8');
     headers.set('Cache-Control', 'no-cache, no-transform');
     headers.set('Connection', 'keep-alive');
     headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
