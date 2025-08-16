@@ -79,13 +79,12 @@ const anomalies = [
 export default function HomePage() {
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
 
-  // THE FIX: The useChat hook now manages all chat logic robustly
+  // THE FIX: The unsupported 'experimental_streamData' property is removed to resolve the build error.
   const { messages, input, handleInputChange, handleSubmit, data, isLoading, append } = useChat({
     api: '/api/chat',
-    experimental_streamData: true,
   });
 
-  // This effect listens for highlight data from the stream and updates the graph
+  // PRESERVED: This effect correctly handles the data stream for highlighting.
   useEffect(() => {
     if (isLoading) {
       setHighlightedNodes([]);
@@ -99,12 +98,12 @@ export default function HomePage() {
     }
   }, [data, isLoading]);
 
-  // PRESERVED: Your full page UI structure is completely unchanged
+  // PRESERVED: Your full page UI structure is completely unchanged.
   return (
     <div className="container">
       <header className="hero">
         <video className="hero-video" autoPlay loop muted playsInline>
-          <source src="/assets/Relic_Animation_1.mp4" type="video/mp4" />
+          <source src="/assets/Relic_Animation_1.mp4" type="video/omv" />
         </video>
         <div className="hero-content">
           <h1>Team Relic</h1>
@@ -151,7 +150,6 @@ export default function HomePage() {
             <KnowledgeGraphShowcase highlightedNodes={highlightedNodes} />
           </div>
           
-          {/* THE FIX: The Chat component now receives all its logic via props */}
           <Chat
             messages={messages}
             input={input}
