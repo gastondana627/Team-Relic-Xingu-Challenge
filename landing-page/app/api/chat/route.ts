@@ -1,6 +1,5 @@
 // app/api/chat/route.ts
 
-// ✅ Force Node.js runtime (for streaming)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -8,19 +7,27 @@ async function getGraphData() {
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
+  console.log("🌐 getGraphData baseUrl:", baseUrl);
+
   const response = await fetch(`${baseUrl}/api/graph-data`);
+  console.log("📊 graph-data status:", response.status);
   return response.json();
 }
 
 export async function POST(req: Request) {
   try {
+    console.log("🚀 /api/chat POST handler triggered");
+
     const { messages } = await req.json();
+    console.log("📝 Incoming messages:", JSON.stringify(messages));
+
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
     const graphData = await getGraphData();
+    console.log("📊 Graph data keys:", Object.keys(graphData));
+
     const graphContext = JSON.stringify(graphData);
 
-    // --- SMART HIGHLIGHT LOGIC ---
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
       latestMessage.includes(node.name.toLowerCase()) ||
@@ -36,14 +43,14 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
 
-    const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object...`;
+    const systemPrompt = `You are 'Relic', an AI research assistant. Knowledge base JSON follows...`;
 
     const allMessages = [
       { role: 'system' as const, content: systemPrompt },
       ...messages,
     ];
 
-    // ✅ Call OpenAI
+    console.log("📡 Sending request to OpenAI...");
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -56,13 +63,13 @@ export async function POST(req: Request) {
         messages: allMessages,
       }),
     });
+    console.log("✅ OpenAI response status:", response.status);
 
     if (!response.ok || !response.body) {
       const errText = await response.text();
       throw new Error(`OpenAI API failed (${response.status}): ${errText}`);
     }
 
-    // ✅ Stream passthrough
     const stream = new ReadableStream({
       async start(controller) {
         const reader = response.body!.getReader();
@@ -77,7 +84,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // ✅ Proper SSE headers for production
+    console.log("🔗 Returning SSE stream to client...");
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream; charset=utf-8',
@@ -88,7 +95,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('💥 PROD ERROR:', error);
+    console.error('💥 PROD ERROR (api/chat):', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Internal Server Error' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
