@@ -1,9 +1,10 @@
 // app/api/chat/route.ts
 
 import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai';
+// THE FIX: Add this import to ensure stream compatibility in the Node.js runtime.
+import { readableFromAsyncIterable } from 'ai/streams';
 
-// THE OFFICIAL FIX: This line is removed to switch the function to the standard Node.js runtime,
-// which has a longer timeout limit and prevents the 500 error.
+// REMOVED: The 'edge' runtime is no longer specified, correctly defaulting to Node.js.
 // export const runtime = 'edge';
 
 // PRESERVED: Your helper function is unchanged.
