@@ -28,6 +28,7 @@ export async function POST(req: Request) {
 
     const graphContext = JSON.stringify(graphData);
 
+    // --- Highlighting ---
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
       latestMessage.includes(node.name.toLowerCase()) ||
