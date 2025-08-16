@@ -2,7 +2,9 @@
 
 import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai';
 
-export const runtime = 'edge';
+// THE OFFICIAL FIX: This line is removed to switch the function to the standard Node.js runtime,
+// which has a longer timeout limit and prevents the 500 error.
+// export const runtime = 'edge';
 
 // PRESERVED: Your helper function is unchanged.
 async function getGraphData() {
@@ -12,9 +14,6 @@ async function getGraphData() {
 }
 
 export async function POST(req: Request) {
-  // LOG 1: Confirm the API route is being hit.
-  console.log("POST /api/chat route hit.");
-
   try {
     const { messages } = await req.json();
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
@@ -43,10 +42,6 @@ export async function POST(req: Request) {
     --- END CONTEXT ---`;
     
     const allMessages = [{ role: 'system' as const, content: systemPrompt }, ...messages];
-
-    // LOG 2: Check for the API key's presence right before the fetch call.
-    // This safely logs true/false without exposing the key itself.
-    console.log("OpenAI API Key is present:", !!process.env.OPENAI_API_KEY);
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -60,12 +55,8 @@ export async function POST(req: Request) {
         messages: allMessages,
       }),
     });
-    
-    // LOG 3: Check the status of the response from OpenAI.
-    console.log("Received response from OpenAI with status:", response.status);
 
     if (!response.ok) {
-      // Throwing an error here will be caught by our catch block below.
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
     
@@ -81,7 +72,6 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(stream, {}, data);
 
   } catch (error) {
-    // LOG 4: This is the most important log. It will print the exact error to the Vercel logs.
     console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
     
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { 
