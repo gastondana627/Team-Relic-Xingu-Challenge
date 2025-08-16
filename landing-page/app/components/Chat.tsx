@@ -3,7 +3,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Message } from 'ai/react';
 
-// THE FIX: Define an interface for props passed down from the parent page
 interface ChatProps {
   messages: Message[];
   input: string;
@@ -21,8 +20,6 @@ const conversationStarters = [
 ];
 
 export default function Chat({ messages, input, isLoading, handleInputChange, handleSubmit, append, anomalies }: ChatProps) {
-  // REMOVED: State for messages, input, and isLoading is now managed by the parent page.
-  
   // PRESERVED: State for image and video generation remains fully intact.
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -37,11 +34,13 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl, generatedVideoUrl]);
 
-  // REMOVED: The large, manual 'handleSubmit' function with the brittle stream parsing logic is now gone.
-
-  // THE FIX: A simple, robust handler for the starter buttons.
+  // THE FIX: The handler now creates a complete Message object with a unique 'id'.
   const handleStarterClick = (text: string) => {
-    append({ role: 'user', content: text });
+    append({
+      id: Date.now().toString(),
+      role: 'user',
+      content: text
+    });
   };
   
   // PRESERVED: Your full, original image generation logic.
@@ -187,4 +186,3 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
     </div>
   );
 }
-

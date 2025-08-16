@@ -14,7 +14,6 @@ const config = [
       ...nextPlugin.configs["core-web-vitals"].rules,
     },
     languageOptions: {
-      // THE FIX: Use the modern 'globals' import for defining global variables.
       globals: {
         ...globals.browser,
         ...globals.node,
