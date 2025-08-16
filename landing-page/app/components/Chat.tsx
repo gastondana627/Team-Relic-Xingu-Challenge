@@ -1,26 +1,32 @@
+// app/components/Chat.tsx
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Message } from 'ai/react';
 
-interface ChatProps {
-  messages: Message[];
-  input: string;
-  isLoading: boolean;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  append: (message: Message) => void;
-  anomalies: string[];
+// This component is now dependency-free from the 'ai' SDK for its core logic.
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
 }
 
+const anomalies = [
+  "The Strategic Upland Plateau",
+  "The Network of Secondary Outposts",
+  "The Elevated Travel Corridor",
+  "The Terrace Settlement",
+  "The Artificial Shoreline"
+];
 const conversationStarters = [
   { text: "Tell me about the most significant anomaly." },
   { text: "Who is on Team Relic?" },
   { text: "What was the mission of this project?" }
 ];
 
-export default function Chat({ messages, input, isLoading, handleInputChange, handleSubmit, append, anomalies }: ChatProps) {
-  // PRESERVED: State for image and video generation remains fully intact.
+export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: string[]) => void }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
@@ -34,16 +40,78 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl, generatedVideoUrl]);
 
-  // THE FIX: The handler now creates a complete Message object with a unique 'id'.
-  const handleStarterClick = (text: string) => {
-    append({
-      id: Date.now().toString(),
-      role: 'user',
-      content: text
-    });
+  const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
+    if (typeof e !== 'string') e.preventDefault();
+    const userMessageContent = typeof e === 'string' ? e : input;
+    if (!userMessageContent.trim() || isLoading) return;
+
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userMessageContent };
+    const newMessages = [...messages, userMessage];
+
+    setMessages(newMessages);
+    setInput('');
+    setIsLoading(true);
+    onNewHighlight([]);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+
+      const highlightedNodesJson = response.headers.get('X-Highlighted-Nodes');
+      if (highlightedNodesJson) {
+        const nodes = JSON.parse(highlightedNodesJson);
+        onNewHighlight(nodes);
+        setTimeout(() => onNewHighlight([]), 5000);
+      }
+
+      if (!response.body) throw new Error('The response body is empty.');
+      
+      const assistantMessageId = Date.now().toString() + '-ai';
+      setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
+
+      // THE FIX: This modern, dependency-free stream parser is robust for production.
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        buffer += value;
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            if (data.trim() === '[DONE]') {
+              break;
+            }
+            try {
+              const parsed = JSON.parse(data);
+              const textChunk = parsed.choices[0]?.delta?.content || '';
+              if (textChunk) {
+                setMessages(prev => prev.map(msg => 
+                  msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
+                ));
+              }
+            } catch (error) {
+              // Ignore malformed JSON chunks
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error("Chat submission error:", error);
+      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  // PRESERVED: Your full, original image generation logic.
   const handleGenerateImage = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
@@ -67,7 +135,6 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
     }
   };
 
-  // PRESERVED: Your full, original video generation logic.
   const handleGenerateVideo = async () => {
     setIsGeneratingVideo(true);
     setVideoStatus("Sending request to generate a video of a random anomaly...");
@@ -101,7 +168,6 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
     }
   };
 
-  // PRESERVED: Your full, original UI and JSX structure.
   return (
     <div className="chat-container">
       <div className="chat-messages">
@@ -112,7 +178,7 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
               <button 
                 key={index} 
                 className="starter-button"
-                onClick={() => handleStarterClick(starter.text)}
+                onClick={() => handleSubmit(starter.text)}
               >
                 {starter.text}
               </button>
@@ -147,7 +213,7 @@ export default function Chat({ messages, input, isLoading, handleInputChange, ha
         <input
           className="chat-input"
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about our discoveries..."
           disabled={isLoading || isGeneratingImage || isGeneratingVideo}
         />

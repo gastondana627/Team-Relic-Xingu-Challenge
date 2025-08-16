@@ -1,8 +1,7 @@
 // app/page.tsx
-'use client'; 
+'use client';
 
-import { useState, useEffect } from 'react';
-import { useChat } from 'ai/react';
+import { useState } from 'react';
 import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
@@ -11,7 +10,6 @@ import Chat from './components/Chat';
 import DocumentGallery from './components/DocumentGallery';
 import KnowledgeGraphShowcase from './components/KnowledgeGraphShowcase';
 
-// PRESERVED: Your full teamMembers data array
 const teamMembers = [ 
     {
         name: "Gaston",
@@ -36,8 +34,6 @@ const teamMembers = [
         }
     },
 ];
-
-// PRESERVED: Your full anomalies data array
 const anomalies = [ 
   {
     id: 1,
@@ -79,31 +75,11 @@ const anomalies = [
 export default function HomePage() {
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
 
-  // THE FIX: The unsupported 'experimental_streamData' property is removed to resolve the build error.
-  const { messages, input, handleInputChange, handleSubmit, data, isLoading, append } = useChat({
-    api: '/api/chat',
-  });
-
-  // PRESERVED: This effect correctly handles the data stream for highlighting.
-  useEffect(() => {
-    if (isLoading) {
-      setHighlightedNodes([]);
-    }
-    if (data && data.length > 0) {
-      const lastDataPacket = data[data.length - 1] as any;
-      if (lastDataPacket.highlightedNodes) {
-        setHighlightedNodes(lastDataPacket.highlightedNodes);
-        setTimeout(() => setHighlightedNodes([]), 5000);
-      }
-    }
-  }, [data, isLoading]);
-
-  // PRESERVED: Your full page UI structure is completely unchanged.
   return (
     <div className="container">
       <header className="hero">
         <video className="hero-video" autoPlay loop muted playsInline>
-          <source src="/assets/Relic_Animation_1.mp4" type="video/omv" />
+          <source src="/assets/Relic_Animation_1.mp4" type="video/mp4" />
         </video>
         <div className="hero-content">
           <h1>Team Relic</h1>
@@ -150,15 +126,7 @@ export default function HomePage() {
             <KnowledgeGraphShowcase highlightedNodes={highlightedNodes} />
           </div>
           
-          <Chat
-            messages={messages}
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-            append={append}
-            anomalies={anomalies.map(a => a.title.substring(4))} 
-          />
+          <Chat onNewHighlight={setHighlightedNodes} />
         </section>
         
         <section id="timeline" className="timeline-section">

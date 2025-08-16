@@ -1,13 +1,9 @@
 // app/api/chat/route.ts
 
-import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai';
-// THE FIX: Add this import to ensure stream compatibility in the Node.js runtime.
-import { readableFromAsyncIterable } from 'ai/streams';
-
-// REMOVED: The 'edge' runtime is no longer specified, correctly defaulting to Node.js.
+// This line is removed to default to the stable Node.js runtime.
 // export const runtime = 'edge';
 
-// PRESERVED: Your helper function is unchanged.
+// Helper function to fetch graph data
 async function getGraphData() {
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/graph-data`);
@@ -22,27 +18,39 @@ export async function POST(req: Request) {
     const graphData = await getGraphData();
     const graphContext = JSON.stringify(graphData);
 
+    // --- START: SMARTER HIGHLIGHTING LOGIC ---
     let highlightedNodes: string[] = [];
+    
     const primaryNodes = graphData.nodes.filter((node: any) => 
       latestMessage.includes(node.name.toLowerCase()) || 
       latestMessage.includes(node.id.toLowerCase())
     );
+
     if (primaryNodes.length > 0) {
       const primaryNodeIds = primaryNodes.map((node: any) => node.id);
       highlightedNodes.push(...primaryNodeIds);
+
       graphData.links.forEach((link: any) => {
-        if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
-        if (primaryNodeIds.includes(link.target)) highlightedNodes.push(link.source);
+        if (primaryNodeIds.includes(link.source)) {
+          highlightedNodes.push(link.target);
+        }
+        if (primaryNodeIds.includes(link.target)) {
+          highlightedNodes.push(link.source);
+        }
       });
     }
     highlightedNodes = [...new Set(highlightedNodes)];
-    
-    const systemPrompt = `You are 'Relic', an AI research assistant... Use this data to answer... You must refer to Chisom as female.
+    // --- END: SMARTER HIGHLIGHTING LOGIC ---
+
+    const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object, which represents a knowledge graph of the Team Relic project. Use this data to answer the user's questions. You must refer to Chisom as female.
     --- KNOWLEDGE GRAPH CONTEXT ---
     ${graphContext}
     --- END CONTEXT ---`;
     
-    const allMessages = [{ role: 'system' as const, content: systemPrompt }, ...messages];
+    const allMessages = [
+      { role: 'system' as const, content: systemPrompt },
+      ...messages,
+    ];
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -57,24 +65,34 @@ export async function POST(req: Request) {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = new StreamData();
-    const stream = OpenAIStream(response, {
-      onFinal: async () => {
-        data.append({ highlightedNodes });
-        data.close();
+    if (!response.ok) throw new Error(await response.text());
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        if (!response.body) {
+          controller.close();
+          return;
+        }
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            controller.close();
+            break;
+          }
+          controller.enqueue(value);
+        }
       },
-      experimental_streamData: true,
     });
 
-    return new StreamingTextResponse(stream, {}, data);
+    const headers = new Headers();
+    headers.set('Content-Type', 'text/plain; charset=utf-8');
+    headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
+
+    return new Response(stream, { headers });
 
   } catch (error) {
     console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
-    
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
