@@ -1,11 +1,13 @@
 // app/api/chat/route.ts
 
-// This line is removed to default to the stable Node.js runtime.
-// export const runtime = 'edge';
+// ✅ Force stable Node.js runtime (important for Vercel streams)
+export const runtime = 'nodejs';
 
 // Helper function to fetch graph data
 async function getGraphData() {
-  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+  const baseUrl = process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/graph-data`);
   return response.json();
 }
@@ -20,7 +22,6 @@ export async function POST(req: Request) {
 
     // --- START: SMARTER HIGHLIGHTING LOGIC ---
     let highlightedNodes: string[] = [];
-    
     const primaryNodes = graphData.nodes.filter((node: any) => 
       latestMessage.includes(node.name.toLowerCase()) || 
       latestMessage.includes(node.id.toLowerCase())
@@ -31,12 +32,8 @@ export async function POST(req: Request) {
       highlightedNodes.push(...primaryNodeIds);
 
       graphData.links.forEach((link: any) => {
-        if (primaryNodeIds.includes(link.source)) {
-          highlightedNodes.push(link.target);
-        }
-        if (primaryNodeIds.includes(link.target)) {
-          highlightedNodes.push(link.source);
-        }
+        if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
+        if (primaryNodeIds.includes(link.target)) highlightedNodes.push(link.source);
       });
     }
     highlightedNodes = [...new Set(highlightedNodes)];
@@ -52,6 +49,7 @@ export async function POST(req: Request) {
       ...messages,
     ];
     
+    // ✅ Call OpenAI with streaming enabled
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -67,6 +65,7 @@ export async function POST(req: Request) {
 
     if (!response.ok) throw new Error(await response.text());
 
+    // ✅ Convert raw body into stream
     const stream = new ReadableStream({
       async start(controller) {
         if (!response.body) {
@@ -85,17 +84,20 @@ export async function POST(req: Request) {
       },
     });
 
+    // ✅ Production-safe headers
     const headers = new Headers();
-    headers.set('Content-Type', 'text/plain; charset=utf-8');
+    headers.set('Content-Type', 'text/event-stream; charset=utf-8'); // <-- updated
+    headers.set('Cache-Control', 'no-cache, no-transform');
+    headers.set('Connection', 'keep-alive');
     headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
 
     return new Response(stream, { headers });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({ error: error.message || 'Internal Server Error' }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
