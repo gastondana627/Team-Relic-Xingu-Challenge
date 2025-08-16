@@ -1,10 +1,10 @@
 // eslint.config.mjs
 import nextPlugin from "@next/eslint-plugin-next";
+import globals from "globals";
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 const config = [
   {
-    // **THE FIX**: This key is required to specify which files the rules apply to.
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     plugins: {
       "@next/next": nextPlugin,
@@ -13,11 +13,13 @@ const config = [
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
     },
-    // This key prevents "React is not defined" errors in some environments.
     languageOptions: {
-        globals: {
-            React: 'readonly',
-        }
+      // THE FIX: Use the modern 'globals' import for defining global variables.
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        React: 'readonly',
+      }
     }
   },
 ];

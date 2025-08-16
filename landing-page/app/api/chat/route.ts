@@ -1,15 +1,11 @@
 // app/api/chat/route.ts
 
-import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai'; // THE FIX: Import StreamData
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai';
+// REMOVED: The 'openai' library client is no longer needed here.
 
 export const runtime = 'edge';
 
-// PRESERVED: Your helper function to fetch graph data
+// PRESERVED: Your helper function to fetch graph data is unchanged.
 async function getGraphData() {
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/graph-data`);
@@ -24,7 +20,7 @@ export async function POST(req: Request) {
     const graphData = await getGraphData();
     const graphContext = JSON.stringify(graphData);
 
-    // PRESERVED: Your highlighting logic is untouched
+    // PRESERVED: Your highlighting logic is untouched.
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) => 
       latestMessage.includes(node.name.toLowerCase()) || 
@@ -40,7 +36,7 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
     
-    // PRESERVED: Your system prompt is untouched
+    // PRESERVED: Your system prompt is untouched.
     const systemPrompt = `You are 'Relic', an AI research assistant... Use this data to answer... You must refer to Chisom as female.
     --- KNOWLEDGE GRAPH CONTEXT ---
     ${graphContext}
@@ -48,26 +44,34 @@ export async function POST(req: Request) {
     
     const allMessages = [{ role: 'system' as const, content: systemPrompt }, ...messages];
     
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      stream: true,
-      messages: allMessages,
+    // THE FIX: Replaced the OpenAI client with a standard fetch call to resolve the type incompatibility.
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY!}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        stream: true,
+        messages: allMessages,
+      }),
     });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${await response.text()}`);
+    }
     
-    // THE FIX: Create a new StreamData instance
     const data = new StreamData();
 
     const stream = OpenAIStream(response, {
       onFinal: async () => {
-        // THE FIX: Use data.append() and data.close() in the onFinal callback
         data.append({ highlightedNodes });
         data.close();
       },
-      // This key is still needed to enable the data streaming feature
       experimental_streamData: true,
     });
 
-    // THE FIX: Pass the data object as the third argument to the response constructor
     return new StreamingTextResponse(stream, {}, data);
 
   } catch (error) {
