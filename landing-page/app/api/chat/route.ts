@@ -1,7 +1,10 @@
 // app/api/chat/route.ts
 
-// ✅ Force stable Node.js runtime (important for Vercel streams)
+// ✅ Force stable Node.js runtime
 export const runtime = 'nodejs';
+
+// ✅ Prevent static caching of API route
+export const dynamic = 'force-dynamic';
 
 // Helper function to fetch graph data
 async function getGraphData() {
@@ -20,24 +23,21 @@ export async function POST(req: Request) {
     const graphData = await getGraphData();
     const graphContext = JSON.stringify(graphData);
 
-    // --- START: SMARTER HIGHLIGHTING LOGIC ---
+    // --- SMARTER HIGHLIGHTING LOGIC ---
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) => 
       latestMessage.includes(node.name.toLowerCase()) || 
       latestMessage.includes(node.id.toLowerCase())
     );
-
     if (primaryNodes.length > 0) {
       const primaryNodeIds = primaryNodes.map((node: any) => node.id);
       highlightedNodes.push(...primaryNodeIds);
-
       graphData.links.forEach((link: any) => {
         if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
         if (primaryNodeIds.includes(link.target)) highlightedNodes.push(link.source);
       });
     }
     highlightedNodes = [...new Set(highlightedNodes)];
-    // --- END: SMARTER HIGHLIGHTING LOGIC ---
 
     const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object, which represents a knowledge graph of the Team Relic project. Use this data to answer the user's questions. You must refer to Chisom as female.
     --- KNOWLEDGE GRAPH CONTEXT ---
@@ -63,7 +63,10 @@ export async function POST(req: Request) {
       }),
     });
 
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`OpenAI API error: ${err}`);
+    }
 
     // ✅ Convert raw body into stream
     const stream = new ReadableStream({
@@ -86,7 +89,7 @@ export async function POST(req: Request) {
 
     // ✅ Production-safe headers
     const headers = new Headers();
-    headers.set('Content-Type', 'text/event-stream; charset=utf-8'); // <-- updated
+    headers.set('Content-Type', 'text/plain; charset=utf-8'); // safer for your frontend
     headers.set('Cache-Control', 'no-cache, no-transform');
     headers.set('Connection', 'keep-alive');
     headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
@@ -94,7 +97,7 @@ export async function POST(req: Request) {
     return new Response(stream, { headers });
 
   } catch (error: any) {
-    console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
+    console.error('💥 CRITICAL CATCH BLOCK ERROR (PROD):', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Internal Server Error' }), 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
