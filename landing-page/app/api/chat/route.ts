@@ -1,15 +1,12 @@
 // app/api/chat/route.ts
 
-// ✅ Force stable Node.js runtime
+// ✅ Force Node.js runtime (for streaming)
 export const runtime = 'nodejs';
-
-// ✅ Prevent static caching of API route
 export const dynamic = 'force-dynamic';
 
-// Helper function to fetch graph data
 async function getGraphData() {
-  const baseUrl = process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/graph-data`);
   return response.json();
@@ -23,14 +20,14 @@ export async function POST(req: Request) {
     const graphData = await getGraphData();
     const graphContext = JSON.stringify(graphData);
 
-    // --- SMARTER HIGHLIGHTING LOGIC ---
+    // --- SMART HIGHLIGHT LOGIC ---
     let highlightedNodes: string[] = [];
-    const primaryNodes = graphData.nodes.filter((node: any) => 
-      latestMessage.includes(node.name.toLowerCase()) || 
+    const primaryNodes = graphData.nodes.filter((node: any) =>
+      latestMessage.includes(node.name.toLowerCase()) ||
       latestMessage.includes(node.id.toLowerCase())
     );
     if (primaryNodes.length > 0) {
-      const primaryNodeIds = primaryNodes.map((node: any) => node.id);
+      const primaryNodeIds = primaryNodes.map((n: any) => n.id);
       highlightedNodes.push(...primaryNodeIds);
       graphData.links.forEach((link: any) => {
         if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
@@ -39,17 +36,14 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
 
-    const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object, which represents a knowledge graph of the Team Relic project. Use this data to answer the user's questions. You must refer to Chisom as female.
-    --- KNOWLEDGE GRAPH CONTEXT ---
-    ${graphContext}
-    --- END CONTEXT ---`;
-    
+    const systemPrompt = `You are 'Relic', an AI research assistant. Your knowledge base is the following JSON object...`;
+
     const allMessages = [
       { role: 'system' as const, content: systemPrompt },
       ...messages,
     ];
-    
-    // ✅ Call OpenAI with streaming enabled
+
+    // ✅ Call OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -68,7 +62,7 @@ export async function POST(req: Request) {
       throw new Error(`OpenAI API failed (${response.status}): ${errText}`);
     }
 
-    // ✅ Convert raw body into stream passthrough
+    // ✅ Stream passthrough
     const stream = new ReadableStream({
       async start(controller) {
         const reader = response.body!.getReader();
@@ -83,19 +77,20 @@ export async function POST(req: Request) {
       },
     });
 
-    // ✅ Headers safe for production
-    const headers = new Headers();
-    headers.set('Content-Type', 'text/plain; charset=utf-8');
-    headers.set('Cache-Control', 'no-cache, no-transform');
-    headers.set('Connection', 'keep-alive');
-    headers.set('X-Highlighted-Nodes', JSON.stringify(highlightedNodes));
-
-    return new Response(stream, { headers });
+    // ✅ Proper SSE headers for production
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Highlighted-Nodes': JSON.stringify(highlightedNodes),
+      },
+    });
 
   } catch (error: any) {
-    console.error('💥 CRITICAL CATCH BLOCK ERROR (PROD):', error);
+    console.error('💥 PROD ERROR:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal Server Error' }), 
+      JSON.stringify({ error: error.message || 'Internal Server Error' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
