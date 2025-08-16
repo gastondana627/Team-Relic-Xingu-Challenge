@@ -1,11 +1,10 @@
 // app/api/chat/route.ts
 
 import { OpenAIStream, StreamingTextResponse, StreamData } from 'ai';
-// REMOVED: The 'openai' library client is no longer needed here.
 
 export const runtime = 'edge';
 
-// PRESERVED: Your helper function to fetch graph data is unchanged.
+// PRESERVED: Your helper function is unchanged.
 async function getGraphData() {
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
   const response = await fetch(`${baseUrl}/api/graph-data`);
@@ -13,6 +12,9 @@ async function getGraphData() {
 }
 
 export async function POST(req: Request) {
+  // LOG 1: Confirm the API route is being hit.
+  console.log("POST /api/chat route hit.");
+
   try {
     const { messages } = await req.json();
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
@@ -20,7 +22,6 @@ export async function POST(req: Request) {
     const graphData = await getGraphData();
     const graphContext = JSON.stringify(graphData);
 
-    // PRESERVED: Your highlighting logic is untouched.
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) => 
       latestMessage.includes(node.name.toLowerCase()) || 
@@ -36,15 +37,17 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
     
-    // PRESERVED: Your system prompt is untouched.
     const systemPrompt = `You are 'Relic', an AI research assistant... Use this data to answer... You must refer to Chisom as female.
     --- KNOWLEDGE GRAPH CONTEXT ---
     ${graphContext}
     --- END CONTEXT ---`;
     
     const allMessages = [{ role: 'system' as const, content: systemPrompt }, ...messages];
+
+    // LOG 2: Check for the API key's presence right before the fetch call.
+    // This safely logs true/false without exposing the key itself.
+    console.log("OpenAI API Key is present:", !!process.env.OPENAI_API_KEY);
     
-    // THE FIX: Replaced the OpenAI client with a standard fetch call to resolve the type incompatibility.
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -57,13 +60,16 @@ export async function POST(req: Request) {
         messages: allMessages,
       }),
     });
+    
+    // LOG 3: Check the status of the response from OpenAI.
+    console.log("Received response from OpenAI with status:", response.status);
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`);
+      // Throwing an error here will be caught by our catch block below.
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
     
     const data = new StreamData();
-
     const stream = OpenAIStream(response, {
       onFinal: async () => {
         data.append({ highlightedNodes });
@@ -75,7 +81,9 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(stream, {}, data);
 
   } catch (error) {
+    // LOG 4: This is the most important log. It will print the exact error to the Vercel logs.
     console.error('💥 CRITICAL CATCH BLOCK ERROR:', error);
+    
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
