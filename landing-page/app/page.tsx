@@ -1,7 +1,8 @@
 // app/page.tsx
-'use client'; // This page still needs to be a client component to manage state
+'use client'; 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useChat } from 'ai/react';
 import AnomalyCard from './components/AnomalyCard';
 import EvidenceCard from './components/EvidenceCard';
 import RulesAccordion from './components/RulesAccordion';
@@ -10,6 +11,7 @@ import Chat from './components/Chat';
 import DocumentGallery from './components/DocumentGallery';
 import KnowledgeGraphShowcase from './components/KnowledgeGraphShowcase';
 
+// PRESERVED: Your full teamMembers data array
 const teamMembers = [ 
     {
         name: "Gaston",
@@ -34,6 +36,8 @@ const teamMembers = [
         }
     },
 ];
+
+// PRESERVED: Your full anomalies data array
 const anomalies = [ 
   {
     id: 1,
@@ -73,9 +77,29 @@ const anomalies = [
 ];
 
 export default function HomePage() {
-  // **THE FIX**: The page now only manages the highlighted nodes state.
   const [highlightedNodes, setHighlightedNodes] = useState<string[]>([]);
 
+  // THE FIX: The useChat hook now manages all chat logic robustly
+  const { messages, input, handleInputChange, handleSubmit, data, isLoading, append } = useChat({
+    api: '/api/chat',
+    experimental_streamData: true,
+  });
+
+  // This effect listens for highlight data from the stream and updates the graph
+  useEffect(() => {
+    if (isLoading) {
+      setHighlightedNodes([]);
+    }
+    if (data && data.length > 0) {
+      const lastDataPacket = data[data.length - 1] as any;
+      if (lastDataPacket.highlightedNodes) {
+        setHighlightedNodes(lastDataPacket.highlightedNodes);
+        setTimeout(() => setHighlightedNodes([]), 5000);
+      }
+    }
+  }, [data, isLoading]);
+
+  // PRESERVED: Your full page UI structure is completely unchanged
   return (
     <div className="container">
       <header className="hero">
@@ -126,8 +150,17 @@ export default function HomePage() {
             <p style={{maxWidth: '65ch', margin: '0 auto 1rem auto'}}>This is a live visualization of the knowledge graph that powers our AI. Click a node to zoom in.</p>
             <KnowledgeGraphShowcase highlightedNodes={highlightedNodes} />
           </div>
-          {/* **THE FIX**: We pass a function to Chat so it can update the highlights */}
-          <Chat onNewHighlight={setHighlightedNodes} />
+          
+          {/* THE FIX: The Chat component now receives all its logic via props */}
+          <Chat
+            messages={messages}
+            input={input}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+            append={append}
+            anomalies={anomalies.map(a => a.title.substring(4))} 
+          />
         </section>
         
         <section id="timeline" className="timeline-section">

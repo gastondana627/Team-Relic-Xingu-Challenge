@@ -1,37 +1,32 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import { Message } from 'ai/react';
 
-// Define the shape of a message object
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
+// THE FIX: Define an interface for props passed down from the parent page
+interface ChatProps {
+  messages: Message[];
+  input: string;
+  isLoading: boolean;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  append: (message: Message) => void;
+  anomalies: string[];
 }
 
-const anomalies = [
-  "The Strategic Upland Plateau",
-  "The Network of Secondary Outposts",
-  "The Elevated Travel Corridor",
-  "The Terrace Settlement",
-  "The Artificial Shoreline"
-];
 const conversationStarters = [
   { text: "Tell me about the most significant anomaly." },
   { text: "Who is on Team Relic?" },
   { text: "What was the mission of this project?" }
 ];
 
-// The component now accepts a function to call when highlights are found
-export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: string[]) => void }) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+export default function Chat({ messages, input, isLoading, handleInputChange, handleSubmit, append, anomalies }: ChatProps) {
+  // REMOVED: State for messages, input, and isLoading is now managed by the parent page.
+  
+  // PRESERVED: State for image and video generation remains fully intact.
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
-  
-  // Video generation state is kept for future implementation
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
@@ -42,73 +37,14 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, generatedImageUrl, generatedVideoUrl]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
-    if (typeof e !== 'string') e.preventDefault();
-    const userMessageContent = typeof e === 'string' ? e : input;
-    if (!userMessageContent.trim() || isLoading) return;
+  // REMOVED: The large, manual 'handleSubmit' function with the brittle stream parsing logic is now gone.
 
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: userMessageContent };
-    const newMessages = [...messages, userMessage];
-
-    setMessages(newMessages);
-    setInput('');
-    setIsLoading(true);
-    onNewHighlight([]); // Clear old highlights immediately
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-
-      // Read the highlighted nodes from the custom header
-      const highlightedNodesJson = response.headers.get('X-Highlighted-Nodes');
-      if (highlightedNodesJson) {
-        const nodes = JSON.parse(highlightedNodesJson);
-        onNewHighlight(nodes);
-        // Clear highlights after a delay
-        setTimeout(() => onNewHighlight([]), 5000);
-      }
-
-      if (!response.body) throw new Error('The response body is empty.');
-      
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      const assistantMessageId = Date.now().toString() + '-ai';
-      setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
-
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.substring(6);
-            if (data.trim() === '[DONE]') break;
-            try {
-              const parsed = JSON.parse(data);
-              const textChunk = parsed.choices[0]?.delta?.content || '';
-              if (textChunk) {
-                setMessages(prev => prev.map(msg => 
-                  msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
-                ));
-              }
-            } catch (error) {}
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Chat submission error:", error);
-      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
-    } finally {
-      setIsLoading(false);
-    }
+  // THE FIX: A simple, robust handler for the starter buttons.
+  const handleStarterClick = (text: string) => {
+    append({ role: 'user', content: text });
   };
   
+  // PRESERVED: Your full, original image generation logic.
   const handleGenerateImage = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
@@ -132,6 +68,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     }
   };
 
+  // PRESERVED: Your full, original video generation logic.
   const handleGenerateVideo = async () => {
     setIsGeneratingVideo(true);
     setVideoStatus("Sending request to generate a video of a random anomaly...");
@@ -165,6 +102,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     }
   };
 
+  // PRESERVED: Your full, original UI and JSX structure.
   return (
     <div className="chat-container">
       <div className="chat-messages">
@@ -175,7 +113,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
               <button 
                 key={index} 
                 className="starter-button"
-                onClick={() => handleSubmit(starter.text)}
+                onClick={() => handleStarterClick(starter.text)}
               >
                 {starter.text}
               </button>
@@ -210,7 +148,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         <input
           className="chat-input"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Ask about our discoveries..."
           disabled={isLoading || isGeneratingImage || isGeneratingVideo}
         />
