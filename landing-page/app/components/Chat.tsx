@@ -3,7 +3,6 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
-// This component is now dependency-free from the 'ai' SDK for its core logic.
 interface Message {
   id: string;
   role: 'user' | 'assistant';
