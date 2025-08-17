@@ -3,10 +3,12 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
+// The Message interface is updated to handle image-only messages.
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
 }
 
 const anomalies = [
@@ -26,7 +28,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
@@ -37,7 +38,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, generatedImageUrl, generatedVideoUrl]);
+  }, [messages, generatedVideoUrl]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
     if (typeof e !== 'string') e.preventDefault();
@@ -71,23 +72,20 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       const assistantMessageId = Date.now().toString() + '-ai';
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = '';
       while (true) {
-        const { value, done } = await reader.read(); // Reads raw Uint8Array chunks
+        const { value, done } = await reader.read();
         if (done) break;
         
-        buffer += decoder.decode(value, { stream: true }); // Decodes the raw chunk
+        buffer += value;
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.substring(6);
-            if (data.trim() === '[DONE]') {
-              break;
-            }
+            if (data.trim() === '[DONE]') break;
             try {
               const parsed = JSON.parse(data);
               const textChunk = parsed.choices[0]?.delta?.content || '';
@@ -96,9 +94,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
                   msg.id === assistantMessageId ? { ...msg, content: msg.content + textChunk } : msg
                 ));
               }
-            } catch (error) {
-              // Ignore malformed JSON chunks
-            }
+            } catch (error) {}
           }
         }
       }
@@ -114,7 +110,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   const handleGenerateImage = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingImage(true);
-    setGeneratedImageUrl(null);
     try {
       const response = await fetch('/api/image', {
         method: 'POST',
@@ -122,15 +117,37 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         body: JSON.stringify({ anomaly: selectedAnomaly }),
       });
       const result = await response.json();
-      if (result.imageUrl) {
-        setGeneratedImageUrl(result.imageUrl);
+      
+      if (result.imageUrl && result.caption) {
+        // THE FIX: Create two separate messages for a better UI flow.
+        
+        // 1. The image-only message.
+        const imageMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: '', // No text content for this bubble
+          imageUrl: result.imageUrl,
+        };
+        setMessages(prev => [...prev, imageMessage]);
+
+        // 2. The text-only caption, added after a short delay.
+        setTimeout(() => {
+          const captionMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: result.caption,
+          };
+          setMessages(prev => [...prev, captionMessage]);
+        }, 750); // 750ms delay for a natural feel
+
       } else {
         throw new Error(result.error || 'Failed to generate image.');
       }
     } catch (error) {
       console.error("Image generation error:", error);
+      setMessages(prev => [...prev, { id: 'error-img', role: 'assistant', content: 'Sorry, I was unable to generate that visualization.' }]);
     } finally {
-      setIsGeneratingImage(false);
+      setIsLoading(false);
     }
   };
 
@@ -144,7 +161,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       const { jobId } = await startResponse.json();
       if (!jobId) throw new Error('Failed to start video generation job.');
 
-      setVideoStatus("Video generation in progress... This can take a few minutes. Checking status...");
+      setVideoStatus("Video generation in progress...");
 
       const intervalId = setInterval(async () => {
         const statusResponse = await fetch(`/api/video/status?jobId=${jobId}`);
@@ -185,16 +202,21 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           </div>
         )}
         {messages.map((m) => (
-          <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
-            <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
-            {m.content}
+          // THE FIX: Refined rendering logic for text and image bubbles.
+          <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} ${m.imageUrl && !m.content ? 'image-only' : ''}`}>
+            {m.content && (
+              <p>
+                <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
+                {m.content}
+              </p>
+            )}
+            {m.imageUrl && (
+              <div className={m.content ? "mt-2" : ""}>
+                <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image" />
+              </div>
+            )}
           </div>
         ))}
-        {generatedImageUrl && (
-          <div className="message-bubble ai-bubble image-bubble">
-            <img src={generatedImageUrl} alt="Generated art of an anomaly" className="chat-image" />
-          </div>
-        )}
         {videoStatus && (
           <div className="message-bubble ai-bubble status-bubble">
             <p>{videoStatus}</p>
@@ -224,8 +246,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           {isLoading ? '...' : 'Send'}
         </button>
       </form>
-
-      {/* THE FIX: Added Tailwind classes to make the layout responsive and centered on mobile. */}
       <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
         <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <select 

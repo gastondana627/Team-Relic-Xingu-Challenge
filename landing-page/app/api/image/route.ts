@@ -17,6 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Anomaly name is required.' }, { status: 400 });
     }
 
+    // PRESERVED: Your detailed, anomaly-specific prompt creation logic.
     const createPromptForAnomaly = (anomalyName: string): string => {
       const styleEnhancers = "digital art, cinematic lighting, highly detailed, 4k, epic, concept art, sharp focus, vibrant colors, archaeological visualization";
       let basePrompt = "";
@@ -53,14 +54,15 @@ export async function POST(req: Request) {
       style: "vivid"
     });
 
-    // **THE FIX**: Use optional chaining (?.) to safely access the URL.
-    // This checks if 'data' and 'data[0]' exist before trying to get the 'url'.
     const imageUrl = response.data?.[0]?.url;
 
+    // THE FIX: Create a descriptive caption to send back to the client.
+    const caption = `Here is an artistic visualization I've generated of the '${anomaly}'. This is based on the data from our expedition.`;
+
     if (imageUrl) {
-      return NextResponse.json({ imageUrl, prompt: finalPrompt });
+      // THE FIX: Return both the imageUrl and the new caption.
+      return NextResponse.json({ imageUrl, caption });
     } else {
-      // If imageUrl is null or undefined, throw an error.
       throw new Error('No image URL found in the OpenAI API response.');
     }
 
@@ -69,4 +71,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-
