@@ -1,24 +1,38 @@
 // app/api/chat/route.ts
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+// Using the default Node.js runtime for maximum compatibility and longer timeouts.
+// export const runtime = 'nodejs';
+// export const dynamic = 'force-dynamic';
 
+// THE FIX: Hardened getGraphData function with improved URL handling and error logging.
 async function getGraphData() {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000';
+  // Switched to NEXT_PUBLIC_SITE_URL for a more reliable production base URL.
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   console.log("🌐 getGraphData baseUrl:", baseUrl);
 
   const response = await fetch(`${baseUrl}/api/graph-data`);
   console.log("📊 graph-data status:", response.status);
-  return response.json();
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("💥 getGraphData fetch failed. Raw response text:", errText);
+    throw new Error(`Failed to fetch graph data (${response.status})`);
+  }
+
+  // This block ensures that if we receive non-JSON, we log the raw text before crashing.
+  const responseText = await response.text();
+  try {
+    return JSON.parse(responseText);
+  } catch (e) {
+    console.error("💥 getGraphData JSON parsing failed. Raw response that caused the error:", responseText);
+    throw new Error("Received invalid JSON from /api/graph-data.");
+  }
 }
 
 export async function POST(req: Request) {
   try {
     console.log("🚀 /api/chat POST handler triggered");
 
-    // ✅ Check OpenAI API key presence
     if (!process.env.OPENAI_API_KEY) {
       console.error("❌ OPENAI_API_KEY missing!");
       return new Response(
@@ -28,15 +42,13 @@ export async function POST(req: Request) {
     }
     console.log("🔑 OPENAI_API_KEY present: ✅");
 
-    // ✅ Parse incoming messages
     const { messages } = await req.json();
     console.log("📝 Incoming messages:", JSON.stringify(messages));
 
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
-    // ✅ Get graph data for context
     const graphData = await getGraphData();
-    console.log("📊 Graph data keys:", Object.keys(graphData));
+    console.log("📊 Graph data successfully parsed. Keys:", Object.keys(graphData));
 
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
@@ -55,7 +67,6 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
 
-    // ✅ System prompt
     const systemPrompt = `You are 'Relic', an AI research assistant. Knowledge base JSON follows...`;
 
     const allMessages = [
@@ -63,7 +74,6 @@ export async function POST(req: Request) {
       ...messages,
     ];
 
-    // ✅ Call OpenAI
     console.log("📡 Sending request to OpenAI...");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -88,7 +98,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Stream response to client
     const stream = new ReadableStream({
       async start(controller) {
         const reader = response.body!.getReader();
