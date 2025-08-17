@@ -19,26 +19,35 @@ export async function POST(req: Request) {
     console.log("🚀 /api/chat POST handler triggered");
 
     // ✅ Check OpenAI API key presence
-    console.log("🔑 OPENAI_API_KEY present?", process.env.OPENAI_API_KEY ? "✅ Yes" : "❌ No");
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("❌ OPENAI_API_KEY missing!");
+      return new Response(
+        JSON.stringify({ error: "Missing OpenAI API key" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    console.log("🔑 OPENAI_API_KEY present: ✅");
 
+    // ✅ Parse incoming messages
     const { messages } = await req.json();
     console.log("📝 Incoming messages:", JSON.stringify(messages));
 
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
+    // ✅ Get graph data for context
     const graphData = await getGraphData();
     console.log("📊 Graph data keys:", Object.keys(graphData));
-
-    const graphContext = JSON.stringify(graphData);
 
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
       latestMessage.includes(node.name.toLowerCase()) ||
       latestMessage.includes(node.id.toLowerCase())
     );
+
     if (primaryNodes.length > 0) {
       const primaryNodeIds = primaryNodes.map((n: any) => n.id);
       highlightedNodes.push(...primaryNodeIds);
+
       graphData.links.forEach((link: any) => {
         if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
         if (primaryNodeIds.includes(link.target)) highlightedNodes.push(link.source);
@@ -46,6 +55,7 @@ export async function POST(req: Request) {
     }
     highlightedNodes = [...new Set(highlightedNodes)];
 
+    // ✅ System prompt
     const systemPrompt = `You are 'Relic', an AI research assistant. Knowledge base JSON follows...`;
 
     const allMessages = [
@@ -53,15 +63,16 @@ export async function POST(req: Request) {
       ...messages,
     ];
 
+    // ✅ Call OpenAI
     console.log("📡 Sending request to OpenAI...");
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY ?? ''}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         stream: true,
         messages: allMessages,
       }),
@@ -71,19 +82,28 @@ export async function POST(req: Request) {
     if (!response.ok || !response.body) {
       const errText = await response.text();
       console.error("💥 OpenAI API call failed:", errText);
-      throw new Error(`OpenAI API failed (${response.status}): ${errText}`);
+      return new Response(
+        JSON.stringify({ error: `OpenAI API failed (${response.status})` }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
     }
 
+    // ✅ Stream response to client
     const stream = new ReadableStream({
       async start(controller) {
         const reader = response.body!.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            controller.close();
-            break;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              break;
+            }
+            controller.enqueue(value);
           }
-          controller.enqueue(value);
+        } catch (err) {
+          console.error("🔥 Error while streaming:", err);
+          controller.error(err);
         }
       },
     });
@@ -91,18 +111,18 @@ export async function POST(req: Request) {
     console.log("🔗 Returning SSE stream to client...");
     return new Response(stream, {
       headers: {
-        'Content-Type': 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-        'X-Highlighted-Nodes': JSON.stringify(highlightedNodes),
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Highlighted-Nodes": JSON.stringify(highlightedNodes),
       },
     });
 
   } catch (error: any) {
-    console.error('💥 PROD ERROR (api/chat):', error);
+    console.error("💥 PROD ERROR (api/chat):", error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal Server Error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message || "Internal Server Error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
