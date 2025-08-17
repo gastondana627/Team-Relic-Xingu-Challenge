@@ -18,6 +18,9 @@ export async function POST(req: Request) {
   try {
     console.log("🚀 /api/chat POST handler triggered");
 
+    // ✅ Check OpenAI API key presence
+    console.log("🔑 OPENAI_API_KEY present?", process.env.OPENAI_API_KEY ? "✅ Yes" : "❌ No");
+
     const { messages } = await req.json();
     console.log("📝 Incoming messages:", JSON.stringify(messages));
 
@@ -28,7 +31,6 @@ export async function POST(req: Request) {
 
     const graphContext = JSON.stringify(graphData);
 
-    // --- Highlighting ---
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
       latestMessage.includes(node.name.toLowerCase()) ||
@@ -68,6 +70,7 @@ export async function POST(req: Request) {
 
     if (!response.ok || !response.body) {
       const errText = await response.text();
+      console.error("💥 OpenAI API call failed:", errText);
       throw new Error(`OpenAI API failed (${response.status}): ${errText}`);
     }
 
