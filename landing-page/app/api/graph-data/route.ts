@@ -1,3 +1,4 @@
+
 // app/api/graph-data/route.ts
 
 import { NextResponse } from 'next/server';
@@ -10,3 +11,4 @@ export async function GET() {
   // The handler now simply returns the imported data.
   return NextResponse.json(fullGraphData);
 }
+
