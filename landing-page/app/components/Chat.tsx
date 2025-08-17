@@ -71,14 +71,16 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       const assistantMessageId = Date.now().toString() + '-ai';
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
-      // THE FIX: This modern, dependency-free stream parser is robust for production.
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      // THE FIX: Replaced the pipeThrough method with a more direct and robust manual decoding approach.
+      // This is the definitive fix for the "Load failed" error in production browsers.
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
       let buffer = '';
       while (true) {
-        const { value, done } = await reader.read();
+        const { value, done } = await reader.read(); // Reads raw Uint8Array chunks
         if (done) break;
         
-        buffer += value;
+        buffer += decoder.decode(value, { stream: true }); // Decodes the raw chunk
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
