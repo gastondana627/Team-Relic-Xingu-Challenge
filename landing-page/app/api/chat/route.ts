@@ -1,33 +1,12 @@
 // app/api/chat/route.ts
 
+// THE FIX: Import the graph data directly from its file to prevent a failing network request in production.
+import { fullGraphData } from '../../lib/graph-data';
+
 // Using the default Node.js runtime for maximum compatibility and longer timeouts.
-// export const runtime = 'nodejs';
-// export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
-// THE FIX: Hardened getGraphData function with improved URL handling and error logging.
-async function getGraphData() {
-  // Switched to NEXT_PUBLIC_SITE_URL for a more reliable production base URL.
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  console.log("🌐 getGraphData baseUrl:", baseUrl);
-
-  const response = await fetch(`${baseUrl}/api/graph-data`);
-  console.log("📊 graph-data status:", response.status);
-
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error("💥 getGraphData fetch failed. Raw response text:", errText);
-    throw new Error(`Failed to fetch graph data (${response.status})`);
-  }
-
-  // This block ensures that if we receive non-JSON, we log the raw text before crashing.
-  const responseText = await response.text();
-  try {
-    return JSON.parse(responseText);
-  } catch (e) {
-    console.error("💥 getGraphData JSON parsing failed. Raw response that caused the error:", responseText);
-    throw new Error("Received invalid JSON from /api/graph-data.");
-  }
-}
+// THE FIX: The unreliable getGraphData function is no longer needed and has been removed.
 
 export async function POST(req: Request) {
   try {
@@ -47,8 +26,10 @@ export async function POST(req: Request) {
 
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
-    const graphData = await getGraphData();
-    console.log("📊 Graph data successfully parsed. Keys:", Object.keys(graphData));
+    // THE FIX: Use the directly imported graph data object.
+    const graphData = fullGraphData;
+    const graphContext = JSON.stringify(graphData);
+    console.log("📊 Graph data loaded directly. Keys:", Object.keys(graphData));
 
     let highlightedNodes: string[] = [];
     const primaryNodes = graphData.nodes.filter((node: any) =>
