@@ -71,8 +71,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       const assistantMessageId = Date.now().toString() + '-ai';
       setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
 
-      // THE FIX: Replaced the pipeThrough method with a more direct and robust manual decoding approach.
-      // This is the definitive fix for the "Load failed" error in production browsers.
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -226,10 +224,12 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           {isLoading ? '...' : 'Send'}
         </button>
       </form>
-      <div className="chat-actions">
-        <div className="anomaly-generator">
+
+      {/* THE FIX: Added Tailwind classes to make the layout responsive and centered on mobile. */}
+      <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
+        <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <select 
-            className="anomaly-select" 
+            className="anomaly-select w-full sm:w-auto" 
             value={selectedAnomaly}
             onChange={(e) => setSelectedAnomaly(e.target.value)}
             disabled={isGeneratingImage || isGeneratingVideo}
@@ -239,7 +239,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           </select>
           <button 
             onClick={handleGenerateImage} 
-            className="image-gen-button"
+            className="image-gen-button w-full sm:w-auto"
             disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
           >
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
