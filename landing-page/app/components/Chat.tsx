@@ -160,10 +160,10 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   };
 
   return (
-    // THE FIX: The main container is now a flex column with a defined height.
-    <div className="chat-container flex flex-col h-[80vh] md:h-auto">
+    // THE FIX: The main container is now a flex column with a defined height that adapts.
+    <div className="chat-container flex flex-col h-[70vh] max-h-[700px] md:h-auto md:max-h-none">
       {/* THE FIX: This container now grows to fill available space and scrolls internally. */}
-      <div className="chat-messages flex-grow overflow-y-auto">
+      <div className="chat-messages flex-grow overflow-y-auto min-h-0">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
             <h4 className="starters-title">Start a Conversation</h4>
@@ -202,44 +202,46 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       </div>
 
       {/* The form and actions are now pushed to the bottom by the flex-grow container above. */}
-      <form onSubmit={handleSubmit} className="chat-form">
-        <input
-          className="chat-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about our discoveries..."
-          disabled={isLoading || isGeneratingImage || isGeneratingVideo}
-        />
-        <button
-          type="submit"
-          className="chat-submit-button"
-          disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input?.trim()}
-        >
-          {isLoading ? '...' : 'Send'}
-        </button>
-      </form>
-      <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
-        <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-          <select 
-            className="anomaly-select w-full sm:w-auto" 
-            value={selectedAnomaly}
-            onChange={(e) => setSelectedAnomaly(e.target.value)}
-            disabled={isGeneratingImage || isGeneratingVideo}
+      <div className="flex-shrink-0">
+        <form onSubmit={handleSubmit} className="chat-form">
+          <input
+            className="chat-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about our discoveries..."
+            disabled={isLoading || isGeneratingImage || isGeneratingVideo}
+          />
+          <button
+            type="submit"
+            className="chat-submit-button"
+            disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input?.trim()}
           >
-            <option value="" disabled>Select an anomaly to visualize...</option>
-            {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
-          </select>
-          <button 
-            onClick={handleGenerateImage} 
-            className="image-gen-button w-full sm:w-auto"
-            disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
-          >
-            {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
+            {isLoading ? '...' : 'Send'}
           </button>
-        </div>
-        <div className="coming-soon-wrapper">
-          <button className="image-gen-button" disabled>Generate Anomaly Video</button>
-          <span className="coming-soon-overlay">Coming Soon</span>
+        </form>
+        <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
+          <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <select 
+              className="anomaly-select w-full sm:w-auto" 
+              value={selectedAnomaly}
+              onChange={(e) => setSelectedAnomaly(e.target.value)}
+              disabled={isGeneratingImage || isGeneratingVideo}
+            >
+              <option value="" disabled>Select an anomaly to visualize...</option>
+              {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
+            </select>
+            <button 
+              onClick={handleGenerateImage} 
+              className="image-gen-button w-full sm:w-auto"
+              disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
+            >
+              {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
+            </button>
+          </div>
+          <div className="coming-soon-wrapper">
+            <button className="image-gen-button" disabled>Generate Anomaly Video</button>
+            <span className="coming-soon-overlay">Coming Soon</span>
+          </div>
         </div>
       </div>
     </div>
