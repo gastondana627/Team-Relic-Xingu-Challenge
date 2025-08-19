@@ -1,7 +1,7 @@
+// app/components/DocumentGallery.tsx
 "use client";
 
 const documents = [
-  // ... your document array ...
   { title: "Upland Plateau - Lidar Scan", pdfUrl: "https://drive.google.com/file/d/1xrJp5j9sTwBiuUZRDpd07AvOT1Sin8Xb/view?usp=sharing" },
   { title: "Upland Plateau - Spectral Analysis", pdfUrl: "https://drive.google.com/file/d/1VlJ9ct2DT7A2rN7glb4fm0yS6vOUImun/view?usp=sharing" },
   { title: "Secondary Outposts - Site Plan", pdfUrl: "https://drive.google.com/file/d/1VEc3stu0ICvL_dDZkP1usHOYUup-_nEk/view?usp=sharing" },
@@ -24,7 +24,9 @@ export default function DocumentGallery() {
   return (
     <div className="document-gallery-grid">
       {documents.map((doc, index) => (
-        <div key={index} className="document-card-link group">
+        // THE FIX: Added the "relative" class to this container.
+        // This creates a new stacking context and contains the absolutely positioned link inside it.
+        <div key={index} className="document-card-link group relative">
           <div className="document-card-content">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="document-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <h4 className="document-title">{doc.title}</h4>
@@ -41,4 +43,3 @@ export default function DocumentGallery() {
     </div>
   );
 }
-

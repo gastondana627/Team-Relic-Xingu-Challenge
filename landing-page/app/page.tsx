@@ -84,6 +84,7 @@ export default function HomePage() {
         <div className="hero-content">
           <h1>Team Relic</h1>
           <p className="subtitle">Unveiling the Lost Histories of the Amazon</p>
+          {/* THE FIX: Ensured the href correctly points to the expedition section ID for scrolling. */}
           <a href="#expedition" className="cta-button">Begin the Expedition</a>
         </div>
       </header>

@@ -161,7 +161,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   return (
     <div className="chat-container">
-      {/* THE FIX: Added a responsive height class to make the chatbox taller on mobile. */}
+      {/* THE FIX: Added responsive height classes to make the chatbox taller on mobile. */}
       <div className="chat-messages h-[400px] md:h-auto">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
@@ -235,6 +235,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
+        {/* THE FIX: The video generation button is reverted to its "Coming Soon" state. */}
         <div className="coming-soon-wrapper">
           <button className="image-gen-button" disabled>Generate Anomaly Video</button>
           <span className="coming-soon-overlay">Coming Soon</span>
