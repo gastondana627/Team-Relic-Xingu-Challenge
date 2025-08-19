@@ -161,28 +161,32 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   return (
     <>
-      {/* THE FIX: Added a component-scoped style tag to enforce a robust flexbox layout on mobile. */}
+      {/* THE FIX: Added a component-scoped style tag to enforce a robust flexbox layout. */}
       <style jsx>{`
-        .chat-container {
+        .chat-flex-container {
           display: flex;
           flex-direction: column;
-          height: 80vh; /* Use a percentage of the viewport height */
-          max-height: 700px; /* Set a max-height for larger mobile screens */
+          /* Use a significant portion of the viewport height on mobile */
+          height: 80vh; 
+          max-height: 800px; /* Cap the height on very tall screens */
         }
-        .chat-messages {
-          flex-grow: 1; /* This makes the message area expand to fill available space */
+        .chat-messages-flex {
+          flex-grow: 1; /* This makes the message area expand to fill all available space */
           overflow-y: auto; /* This enables scrolling when content overflows */
           min-height: 0; /* A critical fix for flexbox scrolling in some browsers */
         }
+        .chat-input-area {
+            flex-shrink: 0; /* Prevents the input area from shrinking */
+        }
         @media (min-width: 768px) { /* Corresponds to md: breakpoint in Tailwind */
-          .chat-container {
+          .chat-flex-container {
             height: auto;
             max-height: none;
           }
         }
       `}</style>
-      <div className="chat-container">
-        <div className="chat-messages">
+      <div className="chat-container chat-flex-container">
+        <div className="chat-messages chat-messages-flex">
           {messages.length === 0 && !isLoading && (
             <div className="starters-container">
               <h4 className="starters-title">Start a Conversation</h4>
@@ -220,8 +224,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           <div ref={messagesEndRef} />
         </div>
 
-        {/* This container ensures the form and actions are pinned to the bottom */}
-        <div className="flex-shrink-0">
+        <div className="chat-input-area">
           <form onSubmit={handleSubmit} className="chat-form">
             <input
               className="chat-input"
