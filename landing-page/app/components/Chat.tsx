@@ -160,9 +160,10 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   };
 
   return (
-    <div className="chat-container">
-      {/* THE FIX: Updated the responsive height class to make the chatbox taller on mobile. */}
-      <div className="chat-messages h-[1200px] md:h-auto">
+    // THE FIX: The main container is now a flex column with a defined height.
+    <div className="chat-container flex flex-col h-[80vh] md:h-auto">
+      {/* THE FIX: This container now grows to fill available space and scrolls internally. */}
+      <div className="chat-messages flex-grow overflow-y-auto">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
             <h4 className="starters-title">Start a Conversation</h4>
@@ -200,6 +201,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         <div ref={messagesEndRef} />
       </div>
 
+      {/* The form and actions are now pushed to the bottom by the flex-grow container above. */}
       <form onSubmit={handleSubmit} className="chat-form">
         <input
           className="chat-input"
