@@ -1,31 +1,33 @@
 // app/api/video/start/route.ts
 
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv'; // Import the Vercel KV client
+
+// THE FIX: The URL now points to the correct, documented image-to-video endpoint.
+const RUNWAY_API_URL = 'https://api.dev.runwayml.com/v1/image_to_video';
 
 export const runtime = 'edge';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const anomalyPrompts = [
-      "A cinematic, sweeping drone shot over a massive, ancient earthwork on a strategic upland plateau in the Amazon...",
-      // ... (your other prompts)
-    ];
-    const randomPrompt = anomalyPrompts[Math.floor(Math.random() * anomalyPrompts.length)];
+    // THE FIX: The API now expects an imageUrl and a text prompt.
+    const { imageUrl, promptText } = await req.json();
+    if (!imageUrl) {
+      return NextResponse.json({ error: 'Image URL is required.' }, { status: 400 });
+    }
 
-    const runwayResponse = await fetch("https://api.dev.runwayml.com/v1/video/generate", {
+    const runwayResponse = await fetch(RUNWAY_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY!}`,
-        "X-Runway-Version": process.env.RUNWAY_API_VERSION!,
+        "X-Runway-Version": "2024-11-06",
       },
+      // THE FIX: The body now sends the required 'promptImage' and optional 'promptText'.
       body: JSON.stringify({
-        model: "gen4_turbo",
-        promptText: randomPrompt,
-        width: 1024,
-        height: 576,
-        motion: 5,
+        promptImage: imageUrl,
+        promptText: promptText || "Animate this image with subtle, cinematic motion.",
+        model: "gen4_turbo", // Specify a valid model from the documentation
+        ratio: "1280:720", // Specify a valid ratio
       }),
     });
 
@@ -34,15 +36,19 @@ export async function POST() {
       throw new Error(`Runway API Error: ${errorText}`);
     }
 
-    const { id: jobId } = await runwayResponse.json();
+    const result = await runwayResponse.json();
+    const jobId = result.id || result.uuid;
 
-    // Store the job status in Vercel KV with a 10-minute expiration.
-    await kv.set(jobId, { status: 'processing' }, { ex: 600 });
+    if (!jobId) {
+      throw new Error("Runway API did not return a job ID.");
+    }
 
-    return NextResponse.json({ jobId });
+    const caption = `I've started animating the image. This may take a few moments.`;
 
-  } catch (error) {
-    console.error('💥 VIDEO START ERROR:', error);
-    return NextResponse.json({ error: 'Failed to start video generation.' }, { status: 500 });
+    return NextResponse.json({ jobId, caption });
+
+  } catch (error: any) {
+    console.error('💥 VIDEO START API ERROR:', error);
+    return NextResponse.json({ error: error.message || 'Failed to start video generation.' }, { status: 500 });
   }
 }

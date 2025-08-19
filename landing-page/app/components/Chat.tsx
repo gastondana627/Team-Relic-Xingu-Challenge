@@ -3,12 +3,12 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
-// The Message interface is updated to handle image-only messages.
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   imageUrl?: string;
+  videoUrl?: string;
 }
 
 const anomalies = [
@@ -31,14 +31,12 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<string>("");
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
-  const [videoStatus, setVideoStatus] = useState<string | null>(null);
-  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, generatedVideoUrl]);
+  }, [messages]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement> | string) => {
     if (typeof e !== 'string') e.preventDefault();
@@ -101,7 +99,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
     } catch (error) {
       console.error("Chat submission error:", error);
-      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, an error occurred.' }]);
+      setMessages(prev => [...prev, { id: `error-${Date.now()}`, role: 'assistant', content: 'Sorry, an error occurred.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -119,18 +117,14 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
       const result = await response.json();
       
       if (result.imageUrl && result.caption) {
-        // THE FIX: Create two separate messages for a better UI flow.
-        
-        // 1. The image-only message.
         const imageMessage: Message = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: '', // No text content for this bubble
+          content: '',
           imageUrl: result.imageUrl,
         };
         setMessages(prev => [...prev, imageMessage]);
 
-        // 2. The text-only caption, added after a short delay.
         setTimeout(() => {
           const captionMessage: Message = {
             id: (Date.now() + 1).toString(),
@@ -138,55 +132,39 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
             content: result.caption,
           };
           setMessages(prev => [...prev, captionMessage]);
-        }, 750); // 750ms delay for a natural feel
+        }, 750);
 
       } else {
         throw new Error(result.error || 'Failed to generate image.');
       }
     } catch (error) {
       console.error("Image generation error:", error);
-      setMessages(prev => [...prev, { id: 'error-img', role: 'assistant', content: 'Sorry, I was unable to generate that visualization.' }]);
+      setMessages(prev => [...prev, { id: `error-img-${Date.now()}`, role: 'assistant', content: 'Sorry, I was unable to generate that visualization.' }]);
     } finally {
-      setIsLoading(false);
+      setIsGeneratingImage(false);
     }
   };
 
+  // This function remains, but the button that calls it will be disabled.
   const handleGenerateVideo = async () => {
+    if (!selectedAnomaly) return;
     setIsGeneratingVideo(true);
-    setVideoStatus("Sending request to generate a video of a random anomaly...");
-    setGeneratedVideoUrl(null);
-
     try {
-      const startResponse = await fetch('/api/video/start', { method: 'POST' });
-      const { jobId } = await startResponse.json();
-      if (!jobId) throw new Error('Failed to start video generation job.');
-
-      setVideoStatus("Video generation in progress...");
-
-      const intervalId = setInterval(async () => {
-        const statusResponse = await fetch(`/api/video/status?jobId=${jobId}`);
-        const { status, videoUrl } = await statusResponse.json();
-        setVideoStatus(`Job status: ${status}...`);
-        if (status === 'complete') {
-          clearInterval(intervalId);
-          setGeneratedVideoUrl(videoUrl);
-          setVideoStatus(null);
-          setIsGeneratingVideo(false);
-        } else if (status === 'failed') {
-          clearInterval(intervalId);
-          throw new Error('Video generation failed.');
-        }
-      }, 10000);
+      // This is a placeholder for the real API call.
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      throw new Error("Video generation is under construction.");
     } catch (error) {
       console.error("Video generation error:", error);
-      setVideoStatus("Sorry, an error occurred while generating the video.");
+      setMessages(prev => [...prev, { id: `error-vid-${Date.now()}`, role: 'assistant', content: 'Sorry, the video generation feature is under construction.' }]);
+    } finally {
       setIsGeneratingVideo(false);
     }
   };
 
   return (
     <div className="chat-container">
-      <div className="chat-messages">
+      {/* THE FIX: Added a responsive height class to make the chatbox taller on mobile. */}
+      <div className="chat-messages h-[400px] md:h-auto">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
             <h4 className="starters-title">Start a Conversation</h4>
@@ -202,7 +180,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           </div>
         )}
         {messages.map((m) => (
-          // THE FIX: Refined rendering logic for text and image bubbles.
           <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} ${m.imageUrl && !m.content ? 'image-only' : ''}`}>
             {m.content && (
               <p>
@@ -215,18 +192,13 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
                 <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image" />
               </div>
             )}
+            {m.videoUrl && (
+              <div className="mt-2">
+                <video src={m.videoUrl} controls autoPlay muted loop className="chat-video" />
+              </div>
+            )}
           </div>
         ))}
-        {videoStatus && (
-          <div className="message-bubble ai-bubble status-bubble">
-            <p>{videoStatus}</p>
-          </div>
-        )}
-        {generatedVideoUrl && (
-          <div className="message-bubble ai-bubble video-bubble">
-            <video src={generatedVideoUrl} controls autoPlay muted loop className="chat-video" />
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -241,7 +213,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         <button
           type="submit"
           className="chat-submit-button"
-          disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input.trim()}
+          disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input?.trim()}
         >
           {isLoading ? '...' : 'Send'}
         </button>
@@ -265,6 +237,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
+        {/* THE FIX: The video generation button is reverted to its "Coming Soon" state. */}
         <div className="coming-soon-wrapper">
           <button className="image-gen-button" disabled>Generate Anomaly Video</button>
           <span className="coming-soon-overlay">Coming Soon</span>

@@ -1,7 +1,10 @@
 // app/api/video/status/route.ts
 
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv'; // Import the Vercel KV client
+
+const RUNWAY_API_URL = 'https://api.dev.runwayml.com/v1';
+
+export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,29 +15,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    // **THE FIX**: Check Vercel KV to see if our local simulation is done.
-    const localJob = await kv.get(jobId);
-    if (!localJob) { // If our job has been marked complete by the Runway check
-        const runwayResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${jobId}`, {
-             headers: {
-                "Authorization": `Bearer ${process.env.RUNWAY_API_KEY!}`,
-                "X-Runway-Version": process.env.RUNWAY_API_VERSION!,
-            },
-        });
-        const result = await runwayResponse.json();
-        if (result.status === 'SUCCEEDED') {
-             return NextResponse.json({ 
-                status: 'complete', 
-                videoUrl: result.output.video_url
-            });
-        }
-    }
-
-    const runwayResponse = await fetch(`https://api.dev.runwayml.com/v1/tasks/${jobId}`, {
+    const runwayResponse = await fetch(`${RUNWAY_API_URL}/tasks/${jobId}`, {
       method: 'GET',
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY!}`,
-        "X-Runway-Version": process.env.RUNWAY_API_VERSION!,
+        "X-Runway-Version": "2024-11-06",
       },
     });
 
@@ -45,20 +30,18 @@ export async function GET(request: Request) {
     const result = await runwayResponse.json();
 
     if (result.status === 'SUCCEEDED') {
-      // **THE FIX**: Delete the job from Vercel KV upon completion.
-      await kv.del(jobId);
+      // THE FIX: The video URL is in the first element of the 'output' array.
       return NextResponse.json({ 
-        status: 'complete', 
-        videoUrl: result.output.video_url
+        status: 'succeeded', 
+        videoUrl: result.output?.[0]
       });
     } else if (result.status === 'FAILED') {
-      await kv.del(jobId);
       return NextResponse.json({ status: 'failed' });
     } else {
       return NextResponse.json({ status: result.status || 'processing' });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 VIDEO STATUS ERROR:', error);
     return NextResponse.json({ error: 'Failed to get video status.' }, { status: 500 });
   }

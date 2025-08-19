@@ -1,34 +1,45 @@
 // app/api/chat/route.ts
 
+// THE FIX: Import the graph data directly from its file to prevent a failing network request in production.
 import { fullGraphData } from '../../lib/graph-data';
 
 // Using the default Node.js runtime for maximum compatibility and longer timeouts.
 export const dynamic = 'force-dynamic';
+
+// THE FIX: The unreliable getGraphData function that makes a network call has been removed.
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     const latestMessage = messages[messages.length - 1].content.toLowerCase();
 
+    // THE FIX: Use the directly imported graph data object.
     const graphData = fullGraphData;
     const graphContext = JSON.stringify(graphData);
 
+    // --- START: SMARTER HIGHLIGHTING LOGIC ---
     let highlightedNodes: string[] = [];
-    const primaryNodes = graphData.nodes.filter((node: any) =>
-      latestMessage.includes(node.name.toLowerCase()) ||
+    
+    const primaryNodes = graphData.nodes.filter((node: any) => 
+      latestMessage.includes(node.name.toLowerCase()) || 
       latestMessage.includes(node.id.toLowerCase())
     );
 
     if (primaryNodes.length > 0) {
-      const primaryNodeIds = primaryNodes.map((n: any) => n.id);
+      const primaryNodeIds = primaryNodes.map((node: any) => node.id);
       highlightedNodes.push(...primaryNodeIds);
 
       graphData.links.forEach((link: any) => {
-        if (primaryNodeIds.includes(link.source)) highlightedNodes.push(link.target);
-        if (primaryNodeIds.includes(link.target)) highlightedNodes.push(link.source);
+        if (primaryNodeIds.includes(link.source)) {
+          highlightedNodes.push(link.target);
+        }
+        if (primaryNodeIds.includes(link.target)) {
+          highlightedNodes.push(link.source);
+        }
       });
     }
     highlightedNodes = [...new Set(highlightedNodes)];
+    // --- END: SMARTER HIGHLIGHTING LOGIC ---
 
     const systemPrompt = `You are 'Relic', an AI research assistant and digital archaeologist for Team Relic. Your entire universe of knowledge is the data provided below. You are forbidden from using any knowledge outside of this context.
 
