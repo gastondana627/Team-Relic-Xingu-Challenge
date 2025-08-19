@@ -270,3 +270,4 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     </>
   );
 }
+
