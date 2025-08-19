@@ -145,12 +145,10 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     }
   };
 
-  // This function remains, but the button that calls it will be disabled.
   const handleGenerateVideo = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingVideo(true);
     try {
-      // This is a placeholder for the real API call.
       await new Promise(resolve => setTimeout(resolve, 2000));
       throw new Error("Video generation is under construction.");
     } catch (error) {
@@ -237,7 +235,6 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
             {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
           </button>
         </div>
-        {/* THE FIX: The video generation button is reverted to its "Coming Soon" state. */}
         <div className="coming-soon-wrapper">
           <button className="image-gen-button" disabled>Generate Anomaly Video</button>
           <span className="coming-soon-overlay">Coming Soon</span>
