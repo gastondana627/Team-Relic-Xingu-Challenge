@@ -161,24 +161,22 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   return (
     <>
-      {/* THE FIX: A component-scoped style tag to enforce a robust, responsive flexbox layout. */}
       <style jsx>{`
         .chat-flex-container {
           display: flex;
           flex-direction: column;
-          /* Use a significant portion of the viewport height on mobile, with a max-height */
           height: 85vh; 
           max-height: 800px;
         }
         .chat-messages-flex {
-          flex-grow: 1; /* This makes the message area expand to fill all available space */
-          overflow-y: auto; /* This enables scrolling when content overflows */
-          min-height: 0; /* A critical fix for flexbox scrolling in some browsers */
+          flex-grow: 1;
+          overflow-y: auto;
+          min-height: 0;
         }
         .chat-input-area {
-          flex-shrink: 0; /* Prevents the input area from shrinking */
+          flex-shrink: 0;
         }
-        @media (min-width: 768px) { /* Corresponds to md: breakpoint in Tailwind */
+        @media (min-width: 768px) {
           .chat-flex-container {
             height: auto;
             max-height: none;
@@ -186,9 +184,9 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         }
       `}</style>
       
-      {/* THE FIX: The JSX structure is updated to match the new CSS rules. */}
       <div className="chat-container chat-flex-container">
-        <div className="chat-messages chat-messages-flex">
+        {/* Scrollable message area with spacing + padding bottom */}
+        <div className="chat-messages chat-messages-flex p-4 space-y-4 pb-24">
           {messages.length === 0 && !isLoading && (
             <div className="starters-container">
               <h4 className="starters-title">Start a Conversation</h4>
@@ -204,7 +202,12 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
             </div>
           )}
           {messages.map((m) => (
-            <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} ${m.imageUrl && !m.content ? 'image-only' : ''}`}>
+            <div 
+              key={m.id} 
+              className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} 
+              ${m.imageUrl && !m.content ? 'image-only' : ''} 
+              max-w-[85%] break-words whitespace-pre-wrap`}
+            >
               {m.content && (
                 <p>
                   <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
@@ -213,12 +216,12 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
               )}
               {m.imageUrl && (
                 <div className={m.content ? "mt-2" : ""}>
-                  <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image" />
+                  <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image rounded-xl shadow" />
                 </div>
               )}
               {m.videoUrl && (
                 <div className="mt-2">
-                  <video src={m.videoUrl} controls autoPlay muted loop className="chat-video" />
+                  <video src={m.videoUrl} controls autoPlay muted loop className="chat-video rounded-xl shadow" />
                 </div>
               )}
             </div>
