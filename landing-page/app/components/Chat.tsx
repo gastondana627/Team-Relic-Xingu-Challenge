@@ -160,90 +160,110 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   };
 
   return (
-    // THE FIX: The main container is now a flex column with a defined height that adapts.
-    <div className="chat-container flex flex-col h-[70vh] max-h-[700px] md:h-auto md:max-h-none">
-      {/* THE FIX: This container now grows to fill available space and scrolls internally. */}
-      <div className="chat-messages flex-grow overflow-y-auto min-h-0">
-        {messages.length === 0 && !isLoading && (
-          <div className="starters-container">
-            <h4 className="starters-title">Start a Conversation</h4>
-            {conversationStarters.map((starter, index) => (
-              <button 
-                key={index} 
-                className="starter-button"
-                onClick={() => handleSubmit(starter.text)}
-              >
-                {starter.text}
-              </button>
-            ))}
-          </div>
-        )}
-        {messages.map((m) => (
-          <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} ${m.imageUrl && !m.content ? 'image-only' : ''}`}>
-            {m.content && (
-              <p>
-                <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
-                {m.content}
-              </p>
-            )}
-            {m.imageUrl && (
-              <div className={m.content ? "mt-2" : ""}>
-                <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image" />
-              </div>
-            )}
-            {m.videoUrl && (
-              <div className="mt-2">
-                <video src={m.videoUrl} controls autoPlay muted loop className="chat-video" />
-              </div>
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+    <>
+      {/* THE FIX: Added a component-scoped style tag to enforce a robust flexbox layout on mobile. */}
+      <style jsx>{`
+        .chat-container {
+          display: flex;
+          flex-direction: column;
+          height: 80vh; /* Use a percentage of the viewport height */
+          max-height: 700px; /* Set a max-height for larger mobile screens */
+        }
+        .chat-messages {
+          flex-grow: 1; /* This makes the message area expand to fill available space */
+          overflow-y: auto; /* This enables scrolling when content overflows */
+          min-height: 0; /* A critical fix for flexbox scrolling in some browsers */
+        }
+        @media (min-width: 768px) { /* Corresponds to md: breakpoint in Tailwind */
+          .chat-container {
+            height: auto;
+            max-height: none;
+          }
+        }
+      `}</style>
+      <div className="chat-container">
+        <div className="chat-messages">
+          {messages.length === 0 && !isLoading && (
+            <div className="starters-container">
+              <h4 className="starters-title">Start a Conversation</h4>
+              {conversationStarters.map((starter, index) => (
+                <button 
+                  key={index} 
+                  className="starter-button"
+                  onClick={() => handleSubmit(starter.text)}
+                >
+                  {starter.text}
+                </button>
+              ))}
+            </div>
+          )}
+          {messages.map((m) => (
+            <div key={m.id} className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} ${m.imageUrl && !m.content ? 'image-only' : ''}`}>
+              {m.content && (
+                <p>
+                  <strong>{m.role === 'user' ? 'You: ' : 'Relic: '}</strong>
+                  {m.content}
+                </p>
+              )}
+              {m.imageUrl && (
+                <div className={m.content ? "mt-2" : ""}>
+                  <img src={m.imageUrl} alt="Generated art of an anomaly" className="chat-image" />
+                </div>
+              )}
+              {m.videoUrl && (
+                <div className="mt-2">
+                  <video src={m.videoUrl} controls autoPlay muted loop className="chat-video" />
+                </div>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
 
-      {/* The form and actions are now pushed to the bottom by the flex-grow container above. */}
-      <div className="flex-shrink-0">
-        <form onSubmit={handleSubmit} className="chat-form">
-          <input
-            className="chat-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about our discoveries..."
-            disabled={isLoading || isGeneratingImage || isGeneratingVideo}
-          />
-          <button
-            type="submit"
-            className="chat-submit-button"
-            disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input?.trim()}
-          >
-            {isLoading ? '...' : 'Send'}
-          </button>
-        </form>
-        <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
-          <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <select 
-              className="anomaly-select w-full sm:w-auto" 
-              value={selectedAnomaly}
-              onChange={(e) => setSelectedAnomaly(e.target.value)}
-              disabled={isGeneratingImage || isGeneratingVideo}
+        {/* This container ensures the form and actions are pinned to the bottom */}
+        <div className="flex-shrink-0">
+          <form onSubmit={handleSubmit} className="chat-form">
+            <input
+              className="chat-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about our discoveries..."
+              disabled={isLoading || isGeneratingImage || isGeneratingVideo}
+            />
+            <button
+              type="submit"
+              className="chat-submit-button"
+              disabled={isLoading || isGeneratingImage || isGeneratingVideo || !input?.trim()}
             >
-              <option value="" disabled>Select an anomaly to visualize...</option>
-              {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-            <button 
-              onClick={handleGenerateImage} 
-              className="image-gen-button w-full sm:w-auto"
-              disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
-            >
-              {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
+              {isLoading ? '...' : 'Send'}
             </button>
-          </div>
-          <div className="coming-soon-wrapper">
-            <button className="image-gen-button" disabled>Generate Anomaly Video</button>
-            <span className="coming-soon-overlay">Coming Soon</span>
+          </form>
+          <div className="chat-actions flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
+            <div className="anomaly-generator flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              <select 
+                className="anomaly-select w-full sm:w-auto" 
+                value={selectedAnomaly}
+                onChange={(e) => setSelectedAnomaly(e.target.value)}
+                disabled={isGeneratingImage || isGeneratingVideo}
+              >
+                <option value="" disabled>Select an anomaly to visualize...</option>
+                {anomalies.map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+              <button 
+                onClick={handleGenerateImage} 
+                className="image-gen-button w-full sm:w-auto"
+                disabled={isGeneratingImage || isGeneratingVideo || !selectedAnomaly}
+              >
+                {isGeneratingImage ? 'Generating...' : 'Generate Visualization'}
+              </button>
+            </div>
+            <div className="coming-soon-wrapper">
+              <button className="image-gen-button" disabled>Generate Anomaly Video</button>
+              <span className="coming-soon-overlay">Coming Soon</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
