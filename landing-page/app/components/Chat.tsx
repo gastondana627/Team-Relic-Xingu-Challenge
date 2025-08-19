@@ -162,7 +162,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
   return (
     <div className="chat-container">
       {/* THE FIX: Updated the responsive height class to make the chatbox taller on mobile. */}
-      <div className="chat-messages h-[600px] md:h-auto">
+      <div className="chat-messages h-[1200px] md:h-auto">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
             <h4 className="starters-title">Start a Conversation</h4>
