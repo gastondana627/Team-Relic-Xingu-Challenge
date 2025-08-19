@@ -165,8 +165,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         .chat-flex-container {
           display: flex;
           flex-direction: column;
-          height: 85vh; 
-          max-height: 800px;
+          height: 100vh; /* Full viewport height */
         }
         .chat-messages-flex {
           flex-grow: 1;
@@ -176,17 +175,11 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
         .chat-input-area {
           flex-shrink: 0;
         }
-        @media (min-width: 768px) {
-          .chat-flex-container {
-            height: auto;
-            max-height: none;
-          }
-        }
       `}</style>
       
       <div className="chat-container chat-flex-container">
-        {/* Scrollable message area with spacing + padding bottom */}
-        <div className="chat-messages chat-messages-flex p-4 space-y-4 pb-24">
+        {/* Scrollable message area with spacing + bigger padding bottom */}
+        <div className="chat-messages chat-messages-flex p-4 space-y-4 pb-32">
           {messages.length === 0 && !isLoading && (
             <div className="starters-container">
               <h4 className="starters-title">Start a Conversation</h4>
@@ -206,7 +199,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
               key={m.id} 
               className={`message-bubble ${m.role === 'user' ? 'user-bubble' : 'ai-bubble'} 
               ${m.imageUrl && !m.content ? 'image-only' : ''} 
-              max-w-[85%] break-words whitespace-pre-wrap`}
+              max-w-[90%] break-words whitespace-pre-wrap`}
             >
               {m.content && (
                 <p>
