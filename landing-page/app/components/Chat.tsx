@@ -161,14 +161,14 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   return (
     <>
-      {/* THE FIX: Added a component-scoped style tag to enforce a robust flexbox layout. */}
+      {/* THE FIX: A component-scoped style tag to enforce a robust, responsive flexbox layout. */}
       <style jsx>{`
         .chat-flex-container {
           display: flex;
           flex-direction: column;
-          /* Use a significant portion of the viewport height on mobile */
-          height: 80vh; 
-          max-height: 800px; /* Cap the height on very tall screens */
+          /* Use a significant portion of the viewport height on mobile, with a max-height */
+          height: 85vh; 
+          max-height: 800px;
         }
         .chat-messages-flex {
           flex-grow: 1; /* This makes the message area expand to fill all available space */
@@ -176,7 +176,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           min-height: 0; /* A critical fix for flexbox scrolling in some browsers */
         }
         .chat-input-area {
-            flex-shrink: 0; /* Prevents the input area from shrinking */
+          flex-shrink: 0; /* Prevents the input area from shrinking */
         }
         @media (min-width: 768px) { /* Corresponds to md: breakpoint in Tailwind */
           .chat-flex-container {
@@ -185,6 +185,8 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
           }
         }
       `}</style>
+      
+      {/* THE FIX: The JSX structure is updated to match the new CSS rules. */}
       <div className="chat-container chat-flex-container">
         <div className="chat-messages chat-messages-flex">
           {messages.length === 0 && !isLoading && (
