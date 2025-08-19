@@ -145,6 +145,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
     }
   };
 
+  // This function remains, but the button that calls it will be disabled.
   const handleGenerateVideo = async () => {
     if (!selectedAnomaly) return;
     setIsGeneratingVideo(true);
@@ -161,7 +162,7 @@ export default function Chat({ onNewHighlight }: { onNewHighlight: (nodes: strin
 
   return (
     <div className="chat-container">
-      {/* THE FIX: Added responsive height classes to make the chatbox taller on mobile. */}
+      {/* THE FIX: Added a responsive height class to make the chatbox taller on mobile. */}
       <div className="chat-messages h-[400px] md:h-auto">
         {messages.length === 0 && !isLoading && (
           <div className="starters-container">
